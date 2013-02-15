@@ -79,4 +79,7 @@ class Tally():
 if __name__ == "__main__":
     tally = Tally()
     route(tally)
-    bottle.run()
+    app = bottle.default_app()
+
+    from waitress import serve
+    serve(app)
