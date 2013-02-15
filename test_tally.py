@@ -12,6 +12,20 @@ class TestTally(unittest.TestCase):
     def two_tally(self):
         return Tally(global_key_length=1, global_max_key_length=2)
 
+    def test_new_counter_is_zero(self):
+        tally = Tally()
+        key = tally.new_key()
+        value = tally.get(key)
+        self.assertEqual(value, 0)
+
+    def test_key_not_found_get(self):
+        tally = Tally()
+        self.assertRaises(KeyError, tally.get, 't')
+
+    def test_key_not_found_inc(self):
+        tally = Tally()
+        self.assertRaises(KeyError, tally.inc, 't')
+
     def test_new_key_is_right_length(self):
         tally = Tally()
         self.assertEqual(len(tally.new_key()), tally.key_length)
@@ -49,6 +63,30 @@ class TestTally(unittest.TestCase):
         for i in range(26*26 + 26):
             tally.new_key()
         self.assertRaises(Tally.OutOfKeysError, tally.new_key)
+
+    def test_increment(self):
+        tally = Tally()
+        key = tally.new_key()
+
+        tally.inc(key)
+        new_value = tally.get(key)
+        self.assertEqual(new_value, 1)
+
+        tally.inc(key, amount=2)
+        new_value = tally.get(key)
+        self.assertEqual(new_value, 3)
+
+    def test_decrement(self):
+        tally = Tally()
+        key = tally.new_key()
+
+        tally.inc(key, amount=-1)
+        new_value = tally.get(key)
+        self.assertEqual(new_value, -1)
+
+        tally.inc(key, amount=-2)
+        new_value = tally.get(key)
+        self.assertEqual(new_value, -3)
 
 if __name__ == '__main__':
     unittest.main()
