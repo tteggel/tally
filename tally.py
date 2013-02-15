@@ -3,6 +3,21 @@ import random
 import string
 import math
 
+def route(app):
+    # index and static
+    bottle.route('/')(app.index)
+    bottle.route('/static/<filepath:path>')(app.static)
+
+    # base route for individual tally
+    key_route = '/<key:re:[a-z]*>'
+
+    # actions
+    bottle.route('/new', method='POST')(app.new)
+    bottle.route(key_route + '/inc', method='POST')(app.inc)
+
+    # views
+    bottle.route(key_route)(app.view_tally)
+
 
 class Tally():
 
@@ -11,17 +26,19 @@ class Tally():
         pass
 
     def __init__(self, global_static_file_root='./static',
-                 global_key_length=1, global_max_key_tries=50, global_max_key_length = 5):
+                 global_key_length=1, global_max_key_length = 5):
         self.static_file_root = global_static_file_root
         self.key_length = global_key_length
-        self.max_key_tries = global_max_key_tries
         self.max_key_length = global_max_key_length
         self.tallys = {}
 
-    @bottle.route('/')
     @bottle.view('index')
     def index(self):
         return {}
+
+    def new(self):
+        key = self.new_key()
+        return bottle.redirect('/' + key)
 
     def gen_key(self):
         key_exists = True
@@ -42,30 +59,24 @@ class Tally():
             if key == None:
                 self.key_length = self.key_length + 1
         if key == None: raise self.OutOfKeysError()
-        self.tallys[key] = key
+        self.tallys[key] = 0
         return key
 
-    @bottle.post('/new')
-    def new(self):
-        key = new_key()
-        return bottle.redirect('/' + key)
-
-    @bottle.get('/<key:re:[a-z]*>')
     @bottle.view('tally')
     def view_tally(self, key=None):
         if key==None or not key in self.tallys: return bottle.abort(404)
         return {'key': key, 'value': self.tallys[key]}
 
-    @bottle.post('/<key:re:[a-z]*>/inc')
     def inc(self, key=None):
         if key==None or not key in self.tallys: return bottle.abort(404)
         inc = bottle.request.forms.inc
         self.tallys[key] = self.tallys[key] + int(inc)
         return bottle.redirect('/' + key)
 
-    @bottle.route('/static/<filepath:path>')
     def static(self, filepath):
         return bottle.static_file(filepath, root=self.static_file_root)
 
 if __name__ == "__main__":
+    tally = Tally()
+    route(tally)
     bottle.run()
