@@ -56,13 +56,13 @@ class TestTally(unittest.TestCase):
         tally = self.one_tally()
         for i in range(26):
             key = tally.new_key()
-        self.assertRaises(Tally.OutOfKeysError, tally.new_key)
+        self.assertRaises(KeyError, tally.new_key)
 
     def test_out_of_keys_two(self):
         tally = self.two_tally()
         for i in range(26*26 + 26):
             tally.new_key()
-        self.assertRaises(Tally.OutOfKeysError, tally.new_key)
+        self.assertRaises(KeyError, tally.new_key)
 
     def test_increment(self):
         tally = Tally()
