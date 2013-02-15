@@ -1,0 +1,3 @@
+[submodule "gevent"]
+	path = gevent
+	url = git@github.com:fantix/gevent.git

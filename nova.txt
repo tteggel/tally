@@ -1,6 +1,6 @@
 nova boot --flavor "100" --image "48335" --key_name "tally" --security_groups "default" tally-ho
 
-nova list-floating-ip
+nova floating-ip-list
 
 nova list
 

@@ -2,6 +2,9 @@ import random
 import string
 import math
 
+class OutOfKeysError(Exception):
+    pass
+
 class Tally():
 
     def __init__(self, global_key_length=1, global_max_key_length = 5):
@@ -28,7 +31,7 @@ class Tally():
             key = find_key()
             if key == None:
                 self.key_length = self.key_length + 1
-        if key == None: raise KeyError
+        if key == None: raise OutOfKeysError
         self.tallys[key] = 0
         return key
 
@@ -38,5 +41,4 @@ class Tally():
         return self.tallys[key]
 
     def get(self, key):
-        if key not in self.tallys: raise KeyError
         return self.tallys[key]
