@@ -1,9 +1,10 @@
-%include header title='Hello World'
-<h1>{{value}}</h1>
+%include header title='Tally'
+<h1 id="value">{{value}}</h1>
 <form action="{{key}}/inc" method="POST">
-  <button class="btn btn-large btn-success" href="#" name="inc" value="1">+1</button>
+  <button type="submit" id="inc" class="btn btn-large btn-success inc" href="#" name="inc" value="1">+1</button>
 </form>
 <form action="{{key}}/inc" method="POST">
-  <button class="btn btn-large btn-success" href="#" name="inc" value="-1">-1</button>
+  <button type="submit" class="btn btn-large btn-success inc" href="#" name="inc" value="-1">-1</button>
 </form>
+<script type="text/javascript" src="/static/js/tally.js"></script>
 %include footer

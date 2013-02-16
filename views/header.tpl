@@ -2,12 +2,11 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>{{title}} &emdash; tally.tteggel.org</title>
+    <title>{{title}} &lt;tally.tteggel.org&gt;</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <!-- Le styles -->
     <link href="/static/bootstrap/css/bootstrap.css" rel="stylesheet">
     <style type="text/css">
       body {
@@ -45,14 +44,15 @@
       .marketing p + h4 {
         margin-top: 28px;
       }
-
     </style>
     <link href="/static/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
 
     <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
     <!--[if lt IE 9]>
-      <script src="../assets/js/html5shiv.js"></script>
+      <script src="/static/bootstrap/js/html5shiv.js"></script>
     <![endif]-->
+
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.js"></script>
 
   </head>
 

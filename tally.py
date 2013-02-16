@@ -1,6 +1,7 @@
 import random
 import string
 import math
+from pubsub import pub
 
 class OutOfKeysError(Exception):
     pass
@@ -35,9 +36,10 @@ class Tally():
         self.tallys[key] = 0
         return key
 
-    def inc(self, key, amount=1):
+    def inc(self, key, inc=1):
         current_tally = self.get(key)
-        self.tallys[key] = current_tally + amount
+        self.tallys[key] = current_tally + int(inc)
+        pub.sendMessage('key.changed.{0}'.format(key), key=key, value=self.tallys[key])
         return self.tallys[key]
 
     def get(self, key):

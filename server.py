@@ -1,11 +1,13 @@
 from bottle import Bottle, view, static_file, redirect, abort, request
+from pubsub import pub
+import json
 
 from tally import Tally
 
 tally = Tally()
 app = Bottle()
 
-def key_404(f):
+def key404(f):
     """
     Make KeyErrors return 404.
     Apply to any route or action that takes a key as parameter.
@@ -23,7 +25,7 @@ def index_route():
     return {}
 
 @app.post('/new')
-@key_404
+@key404
 def new_action():
     key = tally.new_key()
     return redirect('/' + key)
@@ -33,13 +35,30 @@ key_route = '/<key:re:[a-z]*>'
 
 @app.route(key_route)
 @view('tally')
-@key_404
+@key404
 def view_tally_route(key=None):
-    value = tally.get(key)
-    return {'key': key, 'value': value}
+    wsock = request.environ.get('wsgi.websocket')
+    if not wsock:
+        # normal HTTP GET
+        value = tally.get(key)
+        return {'key': key, 'value': value}
+    else:
+        # websocket request
+        def key_changed(key, value):
+            wsock.send(json.dumps({'message': 'changed', 'key': key, 'value': value}))
+        pub.subscribe(key_changed, 'key.changed.{0}'.format(key))
+        while True:
+            try:
+                raw = wsock.receive()
+            except WebSocketError:
+                break
+            decoded = json.loads(raw)
+            if('message' in decoded and decoded['message'] == 'inc'
+                and 'key' in decoded and 'inc' in decoded):
+                tally.inc(key, decoded['inc'])
 
 @app.post(key_route + '/inc')
-@key_404
+@key404
 def inc_action(key=None):
     inc = int(request.forms.inc)
     tally.inc(key, inc)
