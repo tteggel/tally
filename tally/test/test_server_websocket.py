@@ -13,8 +13,9 @@ import os
 import tally.server
 
 class TestServer():
-    def __init__(self, app):
+    def __init__(self, app, max_connect_tries=60):
         self.app = app
+        self.max_connect_tries = max_connect_tries
 
     def start(self):
         def find_endpoint():
@@ -29,8 +30,8 @@ class TestServer():
         with open(os.devnull, 'w') as devnull:
             self.server_process = Popen(['python', self.app.__file__,
                                          '-a', host,
-                                         '-p', str(port)])#,
-                                        #stdout=devnull, stderr=devnull)
+                                         '-p', str(port)],
+                                        stdout=devnull, stderr=devnull)
 
         self.url = 'http://{0}:{1}/'.format(host, port)
 
@@ -42,12 +43,16 @@ class TestServer():
         self.server_process.terminate()
 
     def wait_ready(self):
-        while True:
-            r = requests.get(self.url)
-            if (r.status_code == 200):
-                break
+        tries = self.max_connect_tries
+        while tries > 0:
+            try:
+                r = requests.get(self.url)
+                if (r.status_code == 200):
+                    break
+            except:
+                pass
             sleep(.1)
-
+            tries = tries - 1
 
 class TestWebSocket(ThreadAwareTestCase):
 
