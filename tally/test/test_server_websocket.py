@@ -22,14 +22,14 @@ class TestServer():
             s.bind(('', 0))
             host, port = s.getsockname()
             s.close()
-            return host, port
+            return '127.0.0.1', port
 
         host, port = find_endpoint()
 
         with open(os.devnull, 'w') as devnull:
-            self.server_process = Popen(["python", self.app.__file__,
-                                         "-a", host,
-                                         "-p", str(port)],
+            self.server_process = Popen(['python', self.app.__file__,
+                                         '-a', host,
+                                         '-p', str(port)],
                                         stdout=devnull, stderr=devnull)
 
         self.url = 'http://{0}:{1}/'.format(host, port)
@@ -58,6 +58,7 @@ class TestWebSocket(ThreadAwareTestCase):
 
             new_response = requests.post(url + 'new', allow_redirects=False)
             tally_url = new_response.headers['Location']
+            key = tally_url.split('/')[-1]
             ws_url = tally_url.replace('http', 'ws')
 
             # first client
@@ -76,7 +77,7 @@ class TestWebSocket(ThreadAwareTestCase):
 
             ready.wait()
             ws_one.send(json.dumps({'message': 'inc',
-                                    'key': tally_url.split('/')[-1],
+                                    'key': key,
                                     'inc': '1'}))
 
         test_server.stop()
@@ -88,6 +89,7 @@ class TestWebSocket(ThreadAwareTestCase):
 
             new_response = requests.post(url + 'new', allow_redirects=False)
             tally_url = new_response.headers['Location']
+            key = tally_url.split('/')[-1]
             ws_url = tally_url.replace('http', 'ws')
 
             # first client
@@ -113,12 +115,12 @@ class TestWebSocket(ThreadAwareTestCase):
 
             ready.wait()
             ws_one.send(json.dumps({'message': 'inc',
-                                    'key': tally_url.split('/')[-1],
+                                    'key': key,
                                     'inc': '1'}))
 
             ready.wait()
             ws_one.send(json.dumps({'message': 'inc',
-                                    'key': tally_url.split('/')[-1],
+                                    'key': key,
                                     'inc': '-1'}))
 
         test_server.stop()
