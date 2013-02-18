@@ -28,5 +28,10 @@ Then install the runtime deps::
 And finally the test deps::
   pip install -r requirements.txt
 
-Hack away. Then don't forget::
+You will need to leave and re-enter your venv to make sure that the
+nose in the venv is picked up::
+  deactivate
+  source .venv/bin/activate
+
+Hack away. Don't forget::
   nosetests

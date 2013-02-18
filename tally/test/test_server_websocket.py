@@ -29,8 +29,8 @@ class TestServer():
         with open(os.devnull, 'w') as devnull:
             self.server_process = Popen(['python', self.app.__file__,
                                          '-a', host,
-                                         '-p', str(port)],
-                                        stdout=devnull, stderr=devnull)
+                                         '-p', str(port)])#,
+                                        #stdout=devnull, stderr=devnull)
 
         self.url = 'http://{0}:{1}/'.format(host, port)
 
