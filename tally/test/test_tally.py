@@ -1,5 +1,6 @@
-from tally import Tally, OutOfKeysError
 import unittest
+
+from tally.tally import Tally, OutOfKeysError
 
 class TestTally(unittest.TestCase):
 

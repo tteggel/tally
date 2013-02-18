@@ -3,7 +3,6 @@ import requests
 import tl.testing.thread
 from tl.testing.thread import ThreadAwareTestCase, ThreadJoiner
 import socket
-import threading
 import json
 from threading import Event
 from time import sleep
@@ -11,11 +10,10 @@ from subprocess import Popen
 import unittest
 import os
 
-import server
+import tally.server
 
 class TestServer():
     def __init__(self, app):
-        self._stop_event = Event()
         self.app = app
 
     def start(self):
@@ -29,7 +27,7 @@ class TestServer():
         host, port = find_endpoint()
 
         with open(os.devnull, 'w') as devnull:
-            self.server_process = Popen(["python","server.py",
+            self.server_process = Popen(["python", self.app.__file__,
                                          "-a", host,
                                          "-p", str(port)],
                                         stdout=devnull, stderr=devnull)
@@ -55,7 +53,7 @@ class TestWebSocket(ThreadAwareTestCase):
 
     def test_websockets(self):
         with ThreadJoiner(1):
-            test_server = TestServer(server.app)
+            test_server = TestServer(tally.server)
             url = test_server.start()
 
             new_response = requests.post(url + 'new', allow_redirects=False)
@@ -85,7 +83,7 @@ class TestWebSocket(ThreadAwareTestCase):
 
     def test_websocket_zero_message_bug(self):
         with ThreadJoiner(1):
-            test_server = TestServer(server.app)
+            test_server = TestServer(tally.server)
             url = test_server.start()
 
             new_response = requests.post(url + 'new', allow_redirects=False)

@@ -1,11 +1,12 @@
 from webtest import TestApp
 from websocket import create_connection
-import server
 import unittest
+
+import tally.server
 
 class TestServer(unittest.TestCase):
     def setUp(self):
-        self.testapp = TestApp(server.app)
+        self.testapp = TestApp(tally.server.app)
 
     def test_index(self):
         assert self.testapp.get('/').status == '200 OK'

@@ -5,8 +5,10 @@ from geventwebsocket import WebSocketError, WebSocketHandler
 from pubsub import pub
 import json
 import argparse
+import os
 
 from tally import Tally
+import version
 
 tally = Tally()
 app = Bottle()
@@ -76,11 +78,11 @@ def inc_action(key=None):
 
 @app.route('/static/<filepath:path>')
 def static_route(filepath):
-    return static_file(filepath, root='./static')
+    return static_file(filepath, root=os.path.dirname(__file__) + '/static')
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(
-        description='Tally server. Create and share a counter.')
+        description='Tally server (v{0}). Create and share a counter.'.format(version.get_version()))
     parser.add_argument('-a', '--address', default="0.0.0.0",
                         help="the ip address to bind to.",
                         type=str)
@@ -92,3 +94,7 @@ if __name__ == "__main__":
     server = WSGIServer((args.address, args.port), app,
                         handler_class=WebSocketHandler)
     server.serve_forever()
+
+
+if __name__ == "__main__":
+    main()
