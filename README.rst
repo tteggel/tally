@@ -5,7 +5,10 @@ It counts stuff.
 
 Build Status
 ------------
-.. image:: https://travis-ci.org/thom-leggett/tally.png?branch=master
+|travis|_
+
+.. |travis| image:: https://travis-ci.org/thom-leggett/tally.png?branch=master
+.. _travis: https://travis-ci.org/thom-leggett/tally
 
 Installing
 ----------
