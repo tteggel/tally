@@ -11,6 +11,7 @@ Installing
 ----------
 
 To install (prefereably in a fresh virtualenv)::
+
   python setup.py install
 
 Developing
