@@ -72,7 +72,7 @@ class TestTally(unittest.TestCase):
         new_value = tally.get(key)
         self.assertEqual(new_value, 1)
 
-        tally.inc(key, amount=2)
+        tally.inc(key, inc=2)
         new_value = tally.get(key)
         self.assertEqual(new_value, 3)
 
@@ -80,11 +80,11 @@ class TestTally(unittest.TestCase):
         tally = Tally()
         key = tally.new_key()
 
-        tally.inc(key, amount=-1)
+        tally.inc(key, inc=-1)
         new_value = tally.get(key)
         self.assertEqual(new_value, -1)
 
-        tally.inc(key, amount=-2)
+        tally.inc(key, inc=-2)
         new_value = tally.get(key)
         self.assertEqual(new_value, -3)
 

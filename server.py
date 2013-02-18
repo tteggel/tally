@@ -1,6 +1,10 @@
 from bottle import Bottle, view, static_file, redirect, abort, request
+from gevent.pywsgi import WSGIServer
+from geventwebsocket import WebSocketError, WebSocketHandler
+
 from pubsub import pub
 import json
+import argparse
 
 from tally import Tally
 
@@ -37,6 +41,7 @@ key_route = '/<key:re:[a-z]*>'
 @view('tally')
 @key404
 def view_tally_route(key=None):
+
     wsock = request.environ.get('wsgi.websocket')
     if not wsock:
         # normal HTTP GET
@@ -45,17 +50,22 @@ def view_tally_route(key=None):
     else:
         # websocket request
         def key_changed(key, value):
-            wsock.send(json.dumps({'message': 'changed', 'key': key, 'value': value}))
+            wsock.send(json.dumps({'message': 'changed',
+                                   'key': key,
+                                   'value': value}))
         pub.subscribe(key_changed, 'key.changed.{0}'.format(key))
         while True:
             try:
                 raw = wsock.receive()
             except WebSocketError:
                 break
-            decoded = json.loads(raw)
-            if('message' in decoded and decoded['message'] == 'inc'
-                and 'key' in decoded and 'inc' in decoded):
-                tally.inc(key, decoded['inc'])
+            if (raw):
+                decoded = json.loads(raw)
+                if('message' in decoded
+                   and decoded['message'] == 'inc'
+                   and 'key' in decoded
+                   and 'inc' in decoded):
+                    tally.inc(key, decoded['inc'])
 
 @app.post(key_route + '/inc')
 @key404
@@ -69,8 +79,16 @@ def static_route(filepath):
     return static_file(filepath, root='./static')
 
 if __name__ == "__main__":
-    from gevent.pywsgi import WSGIServer
-    from geventwebsocket import WebSocketHandler, WebSocketError
-    server = WSGIServer(("0.0.0.0", 8080), app,
+    parser = argparse.ArgumentParser(
+        description='Tally server. Create and share a counter.')
+    parser.add_argument('-a', '--address', default="0.0.0.0",
+                        help="the ip address to bind to.",
+                        type=str)
+    parser.add_argument('-p', '--port', default=8080,
+                        help="the port number to bind to.",
+                        type=int)
+    args = parser.parse_args()
+
+    server = WSGIServer((args.address, args.port), app,
                         handler_class=WebSocketHandler)
     server.serve_forever()

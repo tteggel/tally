@@ -1,4 +1,5 @@
 from webtest import TestApp
+from websocket import create_connection
 import server
 import unittest
 
@@ -31,7 +32,6 @@ class TestServer(unittest.TestCase):
         tally_two_url = new_response_two.headers['Location']
 
         self.assertNotEqual(tally_one_url, tally_two_url)
-
 
 if __name__ == '__main__':
     unittest.main()

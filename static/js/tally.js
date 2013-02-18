@@ -33,7 +33,7 @@
       decoded = JSON.parse(event.data);
       if(decoded &&
          decoded.message && decoded.message === "changed" &&
-         decoded.value) {
+         (decoded.value || decoded.value === 0)) {
         $('#value').text(decoded.value);
       }
     }
