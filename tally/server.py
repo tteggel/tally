@@ -40,7 +40,7 @@ def new_action():
     return redirect('/' + key)
 
 # base route for individual tally
-key_route = '/<key:re:[a-z]*>'
+key_route = '/<key:re:[' + Tally.key_space + ']*>'
 
 @app.route(key_route)
 @view('tally')
@@ -58,7 +58,7 @@ def view_tally_route(key=None):
             wsock.send(json.dumps({'message': 'changed',
                                    'key': key,
                                    'value': value}))
-        pub.subscribe(key_changed, 'key.changed.{0}'.format(key))
+        pub.subscribe(key_changed, Tally.VALUE_CHANGED_TOPIC.format(key))
         while True:
             try:
                 raw = wsock.receive()
