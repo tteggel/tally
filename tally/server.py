@@ -1,3 +1,4 @@
+import bottle
 from bottle import Bottle, view, static_file, redirect, abort, request
 from gevent.pywsgi import WSGIServer
 from geventwebsocket import WebSocketError, WebSocketHandler
@@ -12,6 +13,8 @@ import version
 
 tally = Tally()
 app = Bottle()
+
+bottle.TEMPLATE_PATH.append('{0}/views'.format(os.path.dirname(__file__)))
 
 def key404(f):
     """
@@ -78,7 +81,7 @@ def inc_action(key=None):
 
 @app.route('/static/<filepath:path>')
 def static_route(filepath):
-    return static_file(filepath, root=os.path.dirname(__file__) + '/static')
+    return static_file(filepath, root='{0}/static'.format(os.path.dirname(__file__)))
 
 def main():
     parser = argparse.ArgumentParser(
