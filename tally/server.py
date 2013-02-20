@@ -40,10 +40,14 @@ def websocket(connect=None, message=None, error=None):
             else:
                 # websocket request
                 try:
+                    # allow the connect function to send back some
+                    # arbitrary things into this scope to keep them
+                    # alive fur the duration of the event loop below.
                     if connect: persist = connect(wsock, *a, **ka)
                 except WebSocketError:
                     if(error): error(wsock, *a, **ka)
 
+                # websocket event loop
                 while True:
                     try:
                         raw = wsock.receive()
@@ -74,8 +78,8 @@ def view_tally_route_websocket_connect(wsock, key=None):
 
     pub.subscribe(key_changed, Tally.VALUE_CHANGED_TOPIC.format(key))
 
-    # nasty hack to keep this function in scope
-    # for duration of ws connection
+    # pub sub is weak reference so send ref of key_changed back
+    # to event loop scope to keep it alive.
     return [key_changed]
 
 def view_tally_route_websocket_message(wsock, message, key=None):
