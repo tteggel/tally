@@ -8,44 +8,8 @@
     <meta name="author" content="">
 
     <link href="/static/bootstrap/css/bootstrap.css" rel="stylesheet">
-    <style type="text/css">
-      body {
-        padding-top: 20px;
-        padding-bottom: 40px;
-      }
-
-      /* Custom container */
-      .container-narrow {
-        margin: 0 auto;
-        max-width: 700px;
-      }
-      .container-narrow > hr {
-        margin: 30px 0;
-      }
-
-      /* Main marketing message and sign up button */
-      .jumbotron {
-        margin: 60px 0;
-        text-align: center;
-      }
-      .jumbotron h1 {
-        font-size: 72px;
-        line-height: 1;
-      }
-      .jumbotron .btn {
-        font-size: 21px;
-        padding: 14px 24px;
-      }
-
-      /* Supporting marketing content */
-      .marketing {
-        margin: 60px 0;
-      }
-      .marketing p + h4 {
-        margin-top: 28px;
-      }
-    </style>
     <link href="/static/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="/static/css/tally.css" rel="stylesheet">
 
     <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
     <!--[if lt IE 9]>
@@ -62,11 +26,17 @@
       <div class="masthead">
         <ul class="nav nav-pills pull-right">
           <li class="active"><a href="/">Home</a></li>
-          <li><a href="#new" data-toggle="modal">Create a new tally</a></li>
+          <li><a href="/new#new" data-toggle="modal">Create a new tally</a></li>
         </ul>
         <h3 class="muted">tally.tteggel.org</h3>
       </div>
 
-      %include new
+      <div id="new" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="newFormLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            %include new
+          </div>
+        </div>
+      </div>
 
-      <hr>
+    <hr>
