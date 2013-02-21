@@ -1,5 +1,4 @@
 from webtest import TestApp
-from websocket import create_connection
 import unittest
 
 import tally.server
@@ -25,14 +24,22 @@ class TestServer(unittest.TestCase):
         self.assertEqual(new_response.status, '302 Found')
         tally_response = new_response.follow()
 
-    def test_two_new_keys(self):
+    def test_three_new_keys(self):
         new_response_one = self.testapp.post('/new', status=302)
         tally_one_url = new_response_one.headers['Location']
+        new_response_one.follow()
 
         new_response_two = self.testapp.post('/new', status=302)
         tally_two_url = new_response_two.headers['Location']
+        new_response_two.follow()
+
+        new_response_three = self.testapp.post('/new', status=302)
+        tally_three_url = new_response_three.headers['Location']
+        new_response_three.follow()
 
         self.assertNotEqual(tally_one_url, tally_two_url)
+        self.assertNotEqual(tally_one_url, tally_three_url)
+        self.assertNotEqual(tally_two_url, tally_three_url)
 
 if __name__ == '__main__':
     unittest.main()

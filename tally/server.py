@@ -1,5 +1,7 @@
 import bottle
 from bottle import Bottle, view, static_file, redirect, abort, request
+from gevent import sleep
+from gevent import monkey; monkey.patch_all()
 from gevent.pywsgi import WSGIServer
 from geventwebsocket import WebSocketError, WebSocketHandler
 
@@ -42,18 +44,18 @@ def websocket(connect=None, message=None, error=None):
                 try:
                     # allow the connect function to send back some
                     # arbitrary things into this scope to keep them
-                    # alive fur the duration of the event loop below.
+                    # alive for the duration of the event loop below.
                     if connect: persist = connect(wsock, *a, **ka)
-                except WebSocketError:
-                    if(error): error(wsock, *a, **ka)
+                except Exception as e:
+                    if(error): error(wsock, e *a, **ka)
 
                 # websocket event loop
                 while True:
                     try:
                         raw = wsock.receive()
-                        if (raw and message):
-                            message(wsock, raw, *a, **ka)
-                    except WebSocketError:
+                        if raw is None: break
+                        if (message): message(wsock, raw, *a, **ka)
+                    except Exception as e:
                         if error: error(wsock, *a, **ka)
                         break
         return wraps(f)(wrapped)

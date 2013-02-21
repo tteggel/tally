@@ -1,21 +1,24 @@
-from websocket import create_connection
+from ws4py.client.threadedclient import WebSocketClient
 import requests
-import tl.testing.thread
-from tl.testing.thread import ThreadAwareTestCase, ThreadJoiner
 import socket
 import json
 from threading import Event
-from time import sleep
 from subprocess import Popen
 import unittest
 import os
-
-import tally.server
+from time import sleep
 
 class TestServer():
-    def __init__(self, app, max_connect_tries=60):
-        self.app = app
+    def __init__(self, file, max_connect_tries=60):
+        self.file = '{0}/../{1}.py'.format(os.path.dirname(__file__), file)
         self.max_connect_tries = max_connect_tries
+
+    def __enter__(self):
+        self.start()
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.stop()
 
     def start(self):
         def find_endpoint():
@@ -28,9 +31,10 @@ class TestServer():
         host, port = find_endpoint()
 
         with open(os.devnull, 'w') as devnull:
-            self.server_process = Popen(['python', self.app.__file__,
+            self.server_process = Popen(['python', self.file,
                                          '-a', host,
-                                         '-p', str(port)])
+                                         '-p', str(port)],
+                                        stderr=devnull, stdout=devnull)
 
         self.url = 'http://{0}:{1}/'.format(host, port)
 
@@ -53,81 +57,52 @@ class TestServer():
             sleep(.1)
             tries = tries - 1
 
-class TestWebSocket(ThreadAwareTestCase):
+class TestWebSocket(unittest.TestCase):
 
-    def test_websockets(self):
-        with ThreadJoiner(1):
-            test_server = TestServer(tally.server)
-            url = test_server.start()
-
+    def test_websocket(self):
+        with TestServer('server') as test_server:
+            url = test_server.url
             new_response = requests.post(url + 'new', allow_redirects=False)
             tally_url = new_response.headers['Location']
             key = tally_url.split('/')[-1]
             ws_url = tally_url.replace('http', 'ws')
 
-            # first client
-            ws_one = create_connection(ws_url)
-
+            next_expected_state = 1
+            test = self
             ready = Event()
 
-            def second_client():
-                ws_two = create_connection(ws_url)
-                ready.set()
-                message = ws_two.recv()
-                decoded = json.loads(message)
-                self.assertEqual(decoded['message'], 'changed')
+            class SendingClient(WebSocketClient):
+                def send_inc(self, inc):
+                    self.send(json.dumps({'message': 'inc',
+                                          'key': key,
+                                          'inc': inc}))
 
-            self.run_in_thread(second_client)
+                def opened(self):
+                    next_expected_state = 1
+                    self.send_inc(1)
 
-            ready.wait()
-            ws_one.send(json.dumps({'message': 'inc',
-                                    'key': key,
-                                    'inc': '1'}))
+                    ready.wait()
+                    next_expected_state = 0
+                    self.send_inc(-1)
 
-        test_server.stop()
+                    ready.wait()
+                    next_expected_state = -1
+                    self.send_inc(-1)
 
-    def test_websocket_zero_message_bug(self):
-        with ThreadJoiner(1):
-            test_server = TestServer(tally.server)
-            url = test_server.start()
+            class ListeningClient(WebSocketClient):
+                def opened(self):
+                    ws_two = SendingClient(ws_url)
+                    ws_two.connect()
 
-            new_response = requests.post(url + 'new', allow_redirects=False)
-            tally_url = new_response.headers['Location']
-            key = tally_url.split('/')[-1]
-            ws_url = tally_url.replace('http', 'ws')
+                def received_message(self, m):
+                    print "here"
+                    decoded = json.loads(str(m))
+                    test.assertEqual(decoded['message'], 'changed')
+                    test.assertEqual(decoded['value'], next_expected_state)
+                    ready.set()
 
-            # first client
-            ws_one = create_connection(ws_url)
-
-            ready = Event()
-
-            def second_client():
-                ws_two = create_connection(ws_url)
-                ready.set()
-                message = ws_two.recv()
-                decoded = json.loads(message)
-                self.assertEqual(decoded['message'], 'changed')
-                self.assertEqual(decoded['value'], 1)
-
-                ready.set()
-                message = ws_two.recv()
-                decoded = json.loads(message)
-                self.assertEqual(decoded['message'], 'changed')
-                self.assertEqual(decoded['value'], 0)
-
-            self.run_in_thread(second_client)
-
-            ready.wait()
-            ws_one.send(json.dumps({'message': 'inc',
-                                    'key': key,
-                                    'inc': '1'}))
-
-            ready.wait()
-            ws_one.send(json.dumps({'message': 'inc',
-                                    'key': key,
-                                    'inc': '-1'}))
-
-        test_server.stop()
+            ws_one = ListeningClient(ws_url)
+            ws_one.connect()
 
 if __name__ == '__main__':
     unittest.main()
