@@ -8,7 +8,7 @@ from time import mktime
 KEY_SPACE = 'ABCDEFGHJKLMNPQRSTUVWXY123456789'
 
 
-class Tally():
+class Tally(object):
     TALLY_CHANGED_TOPIC = 'value.changed.key{0}'
 
     def __init__(self):
@@ -25,9 +25,9 @@ class Tally():
         return self._initial
 
     @initial.setter
-    def initial(self, value):
-        self._initial = value
-        self.value = value
+    def initial(self, v):
+        self._initial = v
+        self.value = v
 
     def new_key(self):
         key_exists = True

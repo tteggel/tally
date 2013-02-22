@@ -77,7 +77,7 @@ def new_action():
     if(request.forms.name): tally.name = _clean(request.forms.name)
     if(request.forms.desc): tally.desc = _clean(request.forms.desc)
     if(request.forms.initial): tally.initial = float(request.forms.initial)
-    if(request.forms.unit): tally.desc = _clean(request.forms.unit)
+    if(request.forms.unit): tally.unit = _clean(request.forms.unit)
     if(request.forms.inc): tally.buttons = _clean(request.forms.inc)
     return redirect('/' + tally.key)
 
