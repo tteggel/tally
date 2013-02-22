@@ -12,10 +12,10 @@ import os
 from functools import wraps
 import logging
 
-from tally import Tally
+from tally import Tally, Tallies, KEY_SPACE
 import version
 
-tally = Tally()
+tallies = Tallies()
 app = Bottle()
 
 bottle.TEMPLATE_PATH.append('{0}/views'.format(os.path.dirname(__file__)))
@@ -46,7 +46,7 @@ def websocket(connect=None, message=None, error=None):
                     # arbitrary things into this scope to keep them
                     # alive for the duration of the event loop below.
                     if connect: persist = connect(wsock, *a, **ka)
-                except Exception as e:
+                except WebSocketError as e:
                     if(error): error(wsock, e *a, **ka)
 
                 # websocket event loop
@@ -55,7 +55,7 @@ def websocket(connect=None, message=None, error=None):
                         raw = wsock.receive()
                         if raw is None: break
                         if (message): message(wsock, raw, *a, **ka)
-                    except Exception as e:
+                    except WebSocketError as e:
                         if error: error(wsock, *a, **ka)
                         break
         return wraps(f)(wrapped)
@@ -69,8 +69,9 @@ def index_route():
 @app.post('/new')
 @key404
 def new_action():
-    key = tally.new_key()
-    return redirect('/' + key)
+    tally = tallies.new()
+    if(request.forms.name): tally.name = request.forms.name
+    return redirect('/' + tally.key)
 
 def view_tally_route_websocket_connect(wsock, key=None):
     def key_changed(key=None, value=None):
@@ -78,7 +79,7 @@ def view_tally_route_websocket_connect(wsock, key=None):
                                'key': key,
                                'value': value}))
 
-    pub.subscribe(key_changed, Tally.VALUE_CHANGED_TOPIC.format(key))
+    pub.subscribe(key_changed, Tally.TALLY_CHANGED_TOPIC.format(key))
 
     # pub sub is weak reference so send ref of key_changed back
     # to event loop scope to keep it alive.
@@ -90,10 +91,11 @@ def view_tally_route_websocket_message(wsock, message, key=None):
        and decoded['message'] == 'inc'
        and 'key' in decoded
        and 'inc' in decoded):
-        tally.inc(key, decoded['inc'])
+        tally = tallies.get(decoded['key'])
+        tally.inc(decoded['inc'])
 
 # base route for individual tally
-key_route = '/<key:re:[' + Tally.key_space + ']*>'
+key_route = '/<key:re:[' + KEY_SPACE + ']*>'
 
 @app.route(key_route)
 @websocket(connect=view_tally_route_websocket_connect,
@@ -101,15 +103,16 @@ key_route = '/<key:re:[' + Tally.key_space + ']*>'
 @view('tally')
 @key404
 def view_tally_route(key=None):
-    value = tally.get(key)
-    return {'key': key, 'value': value}
+    tally = tallies.get(key)
+    return {'key': tally.key, 'value': tally.value}
 
 @app.post(key_route + '/inc')
 @key404
 def inc_action(key=None):
     inc = int(request.forms.inc)
-    tally.inc(key, inc)
-    return redirect('/' + key)
+    tally = tallies.get(key)
+    tally.inc(inc)
+    return redirect('/' + tally.key)
 
 @app.route('/static/<filepath:path>')
 def static_route(filepath):

@@ -5,48 +5,48 @@ from pubsub import pub
 from datetime import datetime
 from time import mktime
 
-class OutOfKeysError(Exception):
-    pass
+KEY_SPACE = 'ABCDEFGHJKLMNPQRSTUVWXY123456789'
+
 
 class Tally():
+    TALLY_CHANGED_TOPIC = 'value.changed.key{0}'
 
-    VALUE_CHANGED_TOPIC = 'value.changed.key{0}'
-
-    def __init__(self, global_key_length=1, global_max_key_length = 5):
-        self.key_length = global_key_length
-        self.max_key_length = global_max_key_length
-        self.tallys = {}
-
-    key_space = 'ABCDEFGHJKLMNPQRSTUVWXY123456789'
-    key_bits_per_char = int(math.ceil(math.log(len(key_space), 2)))
+    def __init__(self):
+        self.key = self.new_key()
+        self.value = 0
+        self.name = None
 
     def new_key(self):
         key_exists = True
         tries = 42
         key = ''
-        while key_exists and tries > 0:
-            dt = datetime.now()
-            micros_since_epoch = int((mktime(dt.timetuple()) * 1000000)  + dt.microsecond)
-            bits_in_time = int(math.floor(math.log(micros_since_epoch, 2)) + 1)
-            chars_in_key = int(math.ceil(bits_in_time / Tally.key_bits_per_char))
+        key_bits_per_char = int(math.ceil(math.log(len(KEY_SPACE), 2)))
 
-            for n in range(chars_in_key):
-                mask = int(math.pow(2, Tally.key_bits_per_char)-1) << (n * 5)
-                index = (micros_since_epoch & mask) >> (n * 5)
-                key = key + Tally.key_space[index]
+        dt = datetime.now()
+        micros_since_epoch = int((mktime(dt.timetuple()) * 1000000)  + dt.microsecond)
+        bits_in_time = int(math.floor(math.log(micros_since_epoch, 2)) + 1)
+        chars_in_key = int(math.ceil(bits_in_time / key_bits_per_char))
 
-            key_exists = key in self.tallys
-            if key_exists: key = None
-            tries = tries - 1
+        for n in range(chars_in_key):
+            mask = int(math.pow(2, key_bits_per_char)-1) << (n * 5)
+            index = (micros_since_epoch & mask) >> (n * 5)
+            key = key + KEY_SPACE[index]
 
-        self.tallys[key] = 0
         return key
 
-    def inc(self, key, inc=1):
-        current_tally = self.get(key)
-        self.tallys[key] = current_tally + int(inc)
-        pub.sendMessage(Tally.VALUE_CHANGED_TOPIC.format(key), key=key, value=self.tallys[key])
-        return self.tallys[key]
+    def inc(self, inc=1):
+        self.value = self.value + int(inc)
+        pub.sendMessage(Tally.TALLY_CHANGED_TOPIC.format(self.key), key=self.key, value=self.value)
+        return self.value
+
+class Tallies():
+    def __init__(self):
+        self._tallies = {}
 
     def get(self, key):
-        return self.tallys[key]
+        return self._tallies[key]
+
+    def new(self):
+        new = Tally()
+        self._tallies[new.key] = new
+        return new

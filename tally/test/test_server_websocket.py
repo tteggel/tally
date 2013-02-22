@@ -1,8 +1,8 @@
-from ws4py.client.threadedclient import WebSocketClient
+from threading import Condition, Event
+from ws4py.client.threadedclient import WebSocketClient, WebSocketBaseClient
 import requests
 import socket
 import json
-from threading import Event
 from subprocess import Popen
 import unittest
 import os
@@ -58,51 +58,76 @@ class TestServer():
             tries = tries - 1
 
 class TestWebSocket(unittest.TestCase):
-
     def test_websocket(self):
         with TestServer('server') as test_server:
             url = test_server.url
-            new_response = requests.post(url + 'new', allow_redirects=False)
+            new_response = requests.post(url + 'new',
+                                         allow_redirects=False)
             tally_url = new_response.headers['Location']
             key = tally_url.split('/')[-1]
             ws_url = tally_url.replace('http', 'ws')
 
-            next_expected_state = 1
-            test = self
-            ready = Event()
+            results = []
+
+            # ready to send a message?
+            ready = Condition()
+
+            # finished?
+            fin = Event()
 
             class SendingClient(WebSocketClient):
-                def send_inc(self, inc):
+                def send_inc(self, inc, expected=0):
+                    ready.acquire()
+                    ready.wait(1)
                     self.send(json.dumps({'message': 'inc',
                                           'key': key,
                                           'inc': inc}))
+                    ready.release()
 
                 def opened(self):
-                    next_expected_state = 1
-                    self.send_inc(1)
+                    # 0 + 1 = 1
+                    self.send_inc(1, expected=1)
 
-                    ready.wait()
-                    next_expected_state = 0
-                    self.send_inc(-1)
+                    # 1 - 1 = 0
+                    self.send_inc(-1, expected=0)
 
-                    ready.wait()
-                    next_expected_state = -1
-                    self.send_inc(-1)
+                    # 0 - 1 = -1
+                    self.send_inc(-1, expected=-1)
+
+                    # -1 + 1 = 0
+                    self.send_inc(1, expected=0)
+
+                    fin.set()
 
             class ListeningClient(WebSocketClient):
                 def opened(self):
-                    ws_two = SendingClient(ws_url)
-                    ws_two.connect()
+                    self.ws_two = SendingClient(ws_url)
+                    self.ws_two.connect()
 
                 def received_message(self, m):
-                    print "here"
+                    ready.acquire()
                     decoded = json.loads(str(m))
-                    test.assertEqual(decoded['message'], 'changed')
-                    test.assertEqual(decoded['value'], next_expected_state)
-                    ready.set()
+                    result = decoded
+                    results.append(result)
+                    ready.notify()
+                    ready.release()
 
             ws_one = ListeningClient(ws_url)
             ws_one.connect()
+
+            # signal ready to send the first message.
+            ready.acquire(); ready.notify(); ready.release()
+
+            # wait for the end
+            self.assertTrue(fin.wait(2))
+
+            # check the results
+            self.assertEqual(len(results), 4)
+
+            for result in results: self.assertEqual(result['message'], 'changed')
+
+            self.assertEqual([1, 0, -1, 0],
+                             [result['value'] for result in results])
 
 if __name__ == '__main__':
     unittest.main()
