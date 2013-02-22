@@ -1,7 +1,12 @@
+%if defined('page'):
+%rebase page nav=nav
+%end
+
 <form action="new" method="POST">
   <div class="modal-header">
     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
     <h3 id="newFormLabel">Create a new tally</h3>
+    <p class="optional"><small>All fields are optional</small></p>
   </div>
   <div class="modal-body">
 

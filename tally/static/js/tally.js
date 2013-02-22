@@ -5,7 +5,7 @@
   $(ready);
 
   function ready() {
-    key = document.location.pathname.substr(1);
+    key = document.location.pathname.substr(1).split('/')[0];
     hijack();
     listen();
   }

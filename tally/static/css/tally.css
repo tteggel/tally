@@ -20,6 +20,7 @@ body {
 .jumbotron h1 {
     font-size: 72px;
     line-height: 1;
+    margin-top: 0;
 }
 .jumbotron .btn {
     font-size: 21px;
@@ -39,7 +40,7 @@ select, textarea, input[type="text"], input[type="password"], input[type="dateti
 }
 
 input[class*="span"][class*="input-large"], select[class*="span"][class*="input-large"], textarea[class*="span"][class*="input-large"], .uneditable-input[class*="span"][class*="input-large"] {
-    height:auto;
+    height: auto;
 }
 
 label {
@@ -58,9 +59,17 @@ label {
     font-size: 142px;
     font-weight: bolder;
     line-height: 160px;
-    display:inline;
+    display: inline;
 }
 
 #unit, #unit small p {
-    display:inline;
+    display: inline;
+}
+
+#newFormLabel {
+    display: inline;
+}
+
+.optional {
+    margin-bottom: 0px;
 }

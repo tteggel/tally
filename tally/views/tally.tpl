@@ -1,18 +1,18 @@
-%include header title='Tally'
+%rebase page nav=nav
 
 <div class="jumbotron">
 
-%if name:
+%if defined('name') and name:
 <h1>{{!name}}</h1>
 %end
 
-%if desc:
+%if defined('desc') and desc:
 <p>{{!desc}}</p>
 %end
 
 <div id="value">{{int(value)}}</div>
 
-%if unit:
+%if defined('unit') and unit:
 <div id="unit" class="text-right"><small>{{!unit}}</small></div>
 %end
 
@@ -27,9 +27,5 @@
 %end
 </form>
 </div>
-
 <script type="text/javascript" src="/static/js/tally.js"></script>
-
 </div>
-
-%include footer

@@ -62,16 +62,21 @@ def websocket(connect=None, message=None, error=None):
         return wraps(f)(wrapped)
     return decorator
 
-@app.route('/')
-@view('index')
-def index_route():
-    return {}
-
 def _clean(html):
     return clean.clean_html(html)
 
+@app.route('/')
+@view('index')
+def index_route():
+    return {'nav': True}
+
+@app.route('/new')
+@view('new')
+def new_route():
+    return {'page': True,
+            'nav': True}
+
 @app.post('/new')
-@key404
 def new_action():
     tally = tallies.new()
     if(request.forms.name): tally.name = _clean(request.forms.name)
@@ -105,20 +110,34 @@ def view_tally_route_websocket_message(wsock, message, key=None):
 # base route for individual tally
 key_route = '/<key:re:[' + KEY_SPACE + ']*>'
 
-@app.route(key_route)
-@websocket(connect=view_tally_route_websocket_connect,
-           message=view_tally_route_websocket_message)
-@view('tally')
-@key404
-def view_tally_route(key=None):
+def tally_data(key):
     tally = tallies.get(key)
-    return {'key': tally.key,
+    return {'nav': True,
+            'key': tally.key,
             'value': tally.value,
             'name': tally.name,
             'desc': tally.desc,
             'initial': tally.initial,
             'unit': tally.unit,
             'buttons': tally.buttons}
+
+@app.route(key_route + "/minimal")
+@websocket(connect=view_tally_route_websocket_connect,
+           message=view_tally_route_websocket_message)
+@view('tally')
+@key404
+def view_tally_minimal_route(key=None):
+    data = tally_data(key)
+    data['nav'] = False
+    return data
+
+@app.route(key_route)
+@websocket(connect=view_tally_route_websocket_connect,
+           message=view_tally_route_websocket_message)
+@view('tally')
+@key404
+def view_tally_route(key=None):
+    return tally_data(key)
 
 @app.post(key_route + '/inc')
 @key404
@@ -131,6 +150,10 @@ def inc_action(key=None):
 @app.route('/static/<filepath:path>')
 def static_route(filepath):
     return static_file(filepath, root='{0}/static'.format(os.path.dirname(__file__)))
+
+@app.route('<filepath:path>/')
+def slash_route(filepath):
+    return redirect(filepath)
 
 def main():
     parser = argparse.ArgumentParser(
