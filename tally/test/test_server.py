@@ -72,6 +72,5 @@ class TestServer(unittest.TestCase):
         self.assertTrue('-41' in tally_response)
         self.assertTrue('+42' in tally_response)
 
-
 if __name__ == '__main__':
     unittest.main()

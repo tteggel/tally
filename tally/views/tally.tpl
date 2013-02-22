@@ -1,15 +1,35 @@
 %include header title='Tally'
+
+<div class="jumbotron">
+
+%if name:
 <h1>{{!name}}</h1>
+%end
+
+%if desc:
 <p>{{!desc}}</p>
-<div class="row">
-<div class="span3" id="value">{{value}}</div>
-<div class="span2"><small>{{unit}}</small></div>
+%end
+
+<div id="value">{{int(value)}}</div>
+
+%if unit:
+<div id="unit" class="text-right"><small>{{!unit}}</small></div>
+%end
+
+<div class="controls controls-row">
+  <form action="{{key}}/inc" method="POST">
+%for button in buttons:
+  <button type="submit" id="inc" class="btn btn-success btn-large inc" href="#" name="inc" value="{{button}}">\\
+%if button>0:
++\\
+%end
+{{int(button)}}</button>
+%end
+</form>
 </div>
-<form action="{{key}}/inc" method="POST">
-  <button type="submit" id="inc" class="btn btn-large btn-success inc" href="#" name="inc" value="1">+1</button>
-</form>
-<form action="{{key}}/inc" method="POST">
-  <button type="submit" class="btn btn-large btn-success inc" href="#" name="inc" value="-1">-1</button>
-</form>
+
 <script type="text/javascript" src="/static/js/tally.js"></script>
+
+</div>
+
 %include footer

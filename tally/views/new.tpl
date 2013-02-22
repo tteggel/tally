@@ -16,7 +16,7 @@
     <div class="row controls controls-row">
       <label class="span3 vpad12" for="init">Initial value:</label>
       <input type="number" id="init" name="initial" class="input-large span2" placeholder="0">
-      <input type="text" name="units" class="input-small span3" placeholder="units">
+      <input type="text" name="unit" class="input-small span3" placeholder="units">
     </div>
 
     <div class="row controls controls-row">
@@ -29,10 +29,10 @@
           <input type="checkbox" name="inc" value="-1"> -1
         </label>
         <label class="checkbox-inline">
-          <input type="checkbox" name="inc" value="+1" checked="checked"> +1
+          <input type="checkbox" name="inc" value="1" checked="checked"> +1
         </label>
         <label class="checkbox-inline">
-          <input type="checkbox" name="inc" value="+10"> +10
+          <input type="checkbox" name="inc" value="10"> +10
         </label>
       </div>
     </div>

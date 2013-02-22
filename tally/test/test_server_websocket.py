@@ -58,6 +58,8 @@ class TestServer():
             tries = tries - 1
 
 class TestWebSocket(unittest.TestCase):
+    TIMEOUT = 5
+
     def test_websocket(self):
         with TestServer('server') as test_server:
             url = test_server.url
@@ -78,7 +80,7 @@ class TestWebSocket(unittest.TestCase):
             class SendingClient(WebSocketClient):
                 def send_inc(self, inc, expected=0):
                     ready.acquire()
-                    ready.wait(1)
+                    ready.wait(TestWebSocket.TIMEOUT)
                     self.send(json.dumps({'message': 'inc',
                                           'key': key,
                                           'inc': inc}))
@@ -119,7 +121,7 @@ class TestWebSocket(unittest.TestCase):
             ready.acquire(); ready.notify(); ready.release()
 
             # wait for the end
-            self.assertTrue(fin.wait(2))
+            self.assertTrue(fin.wait(TestWebSocket.TIMEOUT))
 
             # check the results
             self.assertEqual(len(results), 4)

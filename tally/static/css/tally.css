@@ -57,4 +57,10 @@ label {
 #value {
     font-size: 142px;
     font-weight: bolder;
+    line-height: 160px;
+    display:inline;
+}
+
+#unit, #unit small p {
+    display:inline;
 }

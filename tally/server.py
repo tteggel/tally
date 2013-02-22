@@ -78,7 +78,7 @@ def new_action():
     if(request.forms.desc): tally.desc = _clean(request.forms.desc)
     if(request.forms.initial): tally.initial = float(request.forms.initial)
     if(request.forms.unit): tally.unit = _clean(request.forms.unit)
-    if(request.forms.inc): tally.buttons = _clean(request.forms.inc)
+    if(request.forms.inc): tally.buttons = request.forms.getall('inc')
     return redirect('/' + tally.key)
 
 def view_tally_route_websocket_connect(wsock, key=None):
@@ -117,7 +117,8 @@ def view_tally_route(key=None):
             'name': tally.name,
             'desc': tally.desc,
             'initial': tally.initial,
-            'unit': tally.unit}
+            'unit': tally.unit,
+            'buttons': tally.buttons}
 
 @app.post(key_route + '/inc')
 @key404

@@ -18,7 +18,7 @@ class Tally(object):
         self.desc = None
         self._initial = 0.0
         self.unit = None
-        self.buttons = None
+        self._buttons = []
 
     @property
     def initial(self):
@@ -28,6 +28,15 @@ class Tally(object):
     def initial(self, v):
         self._initial = v
         self.value = v
+
+    @property
+    def buttons(self):
+        return self._buttons
+
+    @buttons.setter
+    def buttons(self, vs):
+        self._buttons = [float(v) for v in vs]
+        print self._buttons
 
     def new_key(self):
         key_exists = True
