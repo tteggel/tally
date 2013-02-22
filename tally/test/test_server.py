@@ -42,8 +42,8 @@ class TestServer(unittest.TestCase):
         self.assertNotEqual(tally_two_url, tally_three_url)
 
     normal_form = {'name': 'Days in prison',
-                'desc': 'The number of days behind bars.',
-                'init': '451',
+                'desc': 'The number of days behind bars',
+                'initial': '451',
                 'unit': 'prison days',
                 'inc': ['-41', '+42']}
 
@@ -57,7 +57,7 @@ class TestServer(unittest.TestCase):
 
     def test_new_tally_with_desc(self):
         tally_response = self.post_new_tally_with_data(self.normal_form)
-        self.assertTrue('The number of days behind bars.' in tally_response)
+        self.assertTrue('The number of days behind bars' in tally_response)
 
     def test_new_tally_with_init(self):
         tally_response = self.post_new_tally_with_data(self.normal_form)
@@ -69,8 +69,8 @@ class TestServer(unittest.TestCase):
 
     def test_new_tally_with_inc(self):
         tally_response = self.post_new_tally_with_data(self.normal_form)
-        self.assertTrue('-1' in tally_response)
-        self.assertTrue('+1' in tally_response)
+        self.assertTrue('-41' in tally_response)
+        self.assertTrue('+42' in tally_response)
 
 
 if __name__ == '__main__':

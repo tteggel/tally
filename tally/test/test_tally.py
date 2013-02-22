@@ -45,5 +45,13 @@ class TestTally(unittest.TestCase):
         tally.inc(inc=-2)
         self.assertEqual(tally.value, -3)
 
+    def test_setting_initial_sets_value():
+        tally = Tally()
+
+        tally.initial = 3
+
+        assertEqual(tally.initial, 3)
+        assertEqual(tally.value, 3)
+
 if __name__ == '__main__':
     unittest.main()

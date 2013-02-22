@@ -4,6 +4,7 @@ from gevent import sleep
 from gevent import monkey; monkey.patch_all()
 from gevent.pywsgi import WSGIServer
 from geventwebsocket import WebSocketError, WebSocketHandler
+from lxml.html import clean
 
 from pubsub import pub
 import json
@@ -66,11 +67,18 @@ def websocket(connect=None, message=None, error=None):
 def index_route():
     return {}
 
+def _clean(html):
+    return clean.clean_html(html)
+
 @app.post('/new')
 @key404
 def new_action():
     tally = tallies.new()
-    if(request.forms.name): tally.name = request.forms.name
+    if(request.forms.name): tally.name = _clean(request.forms.name)
+    if(request.forms.desc): tally.desc = _clean(request.forms.desc)
+    if(request.forms.initial): tally.initial = float(request.forms.initial)
+    if(request.forms.unit): tally.desc = _clean(request.forms.unit)
+    if(request.forms.inc): tally.buttons = _clean(request.forms.inc)
     return redirect('/' + tally.key)
 
 def view_tally_route_websocket_connect(wsock, key=None):
@@ -92,7 +100,7 @@ def view_tally_route_websocket_message(wsock, message, key=None):
        and 'key' in decoded
        and 'inc' in decoded):
         tally = tallies.get(decoded['key'])
-        tally.inc(decoded['inc'])
+        tally.inc(float(decoded['inc']))
 
 # base route for individual tally
 key_route = '/<key:re:[' + KEY_SPACE + ']*>'
@@ -104,12 +112,17 @@ key_route = '/<key:re:[' + KEY_SPACE + ']*>'
 @key404
 def view_tally_route(key=None):
     tally = tallies.get(key)
-    return {'key': tally.key, 'value': tally.value}
+    return {'key': tally.key,
+            'value': tally.value,
+            'name': tally.name,
+            'desc': tally.desc,
+            'initial': tally.initial,
+            'unit': tally.unit}
 
 @app.post(key_route + '/inc')
 @key404
 def inc_action(key=None):
-    inc = int(request.forms.inc)
+    inc = float(request.forms.inc)
     tally = tallies.get(key)
     tally.inc(inc)
     return redirect('/' + tally.key)

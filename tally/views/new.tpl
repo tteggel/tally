@@ -15,7 +15,7 @@
 
     <div class="row controls controls-row">
       <label class="span3 vpad12" for="init">Initial value:</label>
-      <input type="number" id="init" name="init" class="input-large span2" placeholder="0">
+      <input type="number" id="init" name="initial" class="input-large span2" placeholder="0">
       <input type="text" name="units" class="input-small span3" placeholder="units">
     </div>
 

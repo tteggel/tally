@@ -13,8 +13,21 @@ class Tally():
 
     def __init__(self):
         self.key = self.new_key()
-        self.value = 0
+        self.value = 0.0
         self.name = None
+        self.desc = None
+        self._initial = 0.0
+        self.unit = None
+        self.buttons = None
+
+    @property
+    def initial(self):
+        return self._initial
+
+    @initial.setter
+    def initial(self, value):
+        self._initial = value
+        self.value = value
 
     def new_key(self):
         key_exists = True
@@ -34,8 +47,8 @@ class Tally():
 
         return key
 
-    def inc(self, inc=1):
-        self.value = self.value + int(inc)
+    def inc(self, inc=1.0):
+        self.value = self.value + float(inc)
         pub.sendMessage(Tally.TALLY_CHANGED_TOPIC.format(self.key), key=self.key, value=self.value)
         return self.value
 

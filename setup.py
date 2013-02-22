@@ -27,7 +27,8 @@ setup(
     install_requires=['bottle==0.11.6',
                       'gevent==0.13.8',
                       'gevent-websocket==0.3.6',
-                      'pypubsub==3.1.2'],
+                      'pypubsub==3.1.2',
+                      'lxml==3.1.0'],
     entry_points={
         'console_scripts': [
             'tally = tally.server:main',

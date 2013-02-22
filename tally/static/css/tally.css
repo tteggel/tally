@@ -53,3 +53,8 @@ label {
 .vpad6 {
      margin-top: 6px;
 }
+
+#value {
+    font-size: 142px;
+    font-weight: bolder;
+}
