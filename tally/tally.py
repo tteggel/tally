@@ -4,20 +4,32 @@ import math
 from pubsub import pub
 from datetime import datetime
 from time import mktime
+from functools import wraps
 
 KEY_SPACE = 'ABCDEFGHJKLMNPQRSTUVWXY123456789'
 
-
 class Tally(object):
-    TALLY_CHANGED_TOPIC = 'value.changed.key{0}'
+    CHANGED_FIELD_TOPIC = 'tally.changed.key{0}.{1}'
+    CHANGED_TOPIC = 'tally.changed.key{0}'
+    NEW_TOPIC = 'tally.new'
+
+    def publish_changes(field):
+        def decorator(f):
+            def wrapper(self, *a, **ka):
+                topic = Tally.CHANGED_FIELD_TOPIC.format(self.key, field)
+                pub.sendMessage(topic, tally=self)
+                f(self, *a, **ka)
+            return wraps(f)(wrapper)
+        return decorator
+
 
     def __init__(self):
-        self.key = self.new_key()
-        self.value = 0.0
-        self.name = None
-        self.desc = None
+        self._key = self.new_key()
+        self._value = 0.0
+        self._name = None
+        self._desc = None
         self._initial = 0.0
-        self.unit = None
+        self._unit = None
         self._buttons = []
 
     @property
@@ -25,18 +37,54 @@ class Tally(object):
         return self._initial
 
     @initial.setter
+    @publish_changes('initial')
     def initial(self, v):
         self._initial = v
-        self.value = v
+        self._value = v
 
     @property
     def buttons(self):
         return self._buttons
 
     @buttons.setter
+    @publish_changes('buttons')
     def buttons(self, vs):
         self._buttons = [float(v) for v in vs]
-        print self._buttons
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    @publish_changes('name')
+    def name(self, v):
+        self._name = v
+
+    @property
+    def desc(self):
+        return self._desc
+
+    @desc.setter
+    @publish_changes('desc')
+    def desc(self, v):
+        self._desc = v
+
+    @property
+    def unit(self):
+        return self._unit
+
+    @unit.setter
+    @publish_changes('unit')
+    def unit(self, v):
+        self._unit = v
+
+    @property
+    def value(self):
+        return self._value
+
+    @property
+    def key(self):
+        return self._key
 
     def new_key(self):
         key_exists = True
@@ -57,9 +105,10 @@ class Tally(object):
         return key
 
     def inc(self, inc=1.0):
-        self.value = self.value + float(inc)
-        pub.sendMessage(Tally.TALLY_CHANGED_TOPIC.format(self.key), key=self.key, value=self.value)
-        return self.value
+        self._value = self._value + float(inc)
+        topic = Tally.CHANGED_FIELD_TOPIC.format(self.key, 'value')
+        pub.sendMessage(topic, tally=self)
+        return self._value
 
 class Tallies():
     def __init__(self):
@@ -71,4 +120,5 @@ class Tallies():
     def new(self):
         new = Tally()
         self._tallies[new.key] = new
+        pub.sendMessage(Tally.NEW_TOPIC, tally=self)
         return new

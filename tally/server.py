@@ -35,7 +35,7 @@ def key404(f):
 
 def websocket(connect=None, message=None, error=None):
     def decorator(f):
-        def wrapped(*a, **ka):
+        def wrapper(*a, **ka):
             wsock = request.environ.get('wsgi.websocket')
             if not wsock:
                 # normal route execution please
@@ -59,7 +59,7 @@ def websocket(connect=None, message=None, error=None):
                     except WebSocketError as e:
                         if error: error(wsock, *a, **ka)
                         break
-        return wraps(f)(wrapped)
+        return wraps(f)(wrapper)
     return decorator
 
 def _clean(html):
@@ -87,12 +87,12 @@ def new_action():
     return redirect('/' + tally.key)
 
 def view_tally_route_websocket_connect(wsock, key=None):
-    def key_changed(key=None, value=None):
+    def key_changed(tally=None):
         wsock.send(json.dumps({'message': 'changed',
-                               'key': key,
-                               'value': value}))
+                               'key': tally.key,
+                               'value': tally.value}))
 
-    pub.subscribe(key_changed, Tally.TALLY_CHANGED_TOPIC.format(key))
+    pub.subscribe(key_changed, Tally.CHANGED_FIELD_TOPIC.format(key, 'value'))
 
     # pub sub is weak reference so send ref of key_changed back
     # to event loop scope to keep it alive.
