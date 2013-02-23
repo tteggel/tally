@@ -17,7 +17,7 @@
 %end
 
 <div class="controls controls-row">
-  <form action="{{key}}/inc" method="POST">
+  <form action="/{{key}}/inc" method="POST">
 %for button in buttons:
   <button type="submit" id="inc" class="btn btn-success btn-large inc" href="#" name="inc" value="{{button}}">\\
 %if button>0:
