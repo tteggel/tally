@@ -6,20 +6,24 @@ from gevent.pywsgi import WSGIServer
 from geventwebsocket import WebSocketError, WebSocketHandler
 from lxml.html import clean
 
-from pubsub import pub
+from functools import wraps
 import json
 import argparse
 import os
-from functools import wraps
 import logging
 
-from tally import Tally, Tallies, KEY_SPACE
+from tally import Tally, KEY_SPACE
 import version
+import events
 
-tallies = Tallies()
+tallies = {}
 app = Bottle()
 
 bottle.TEMPLATE_PATH.append('{0}/views'.format(os.path.dirname(__file__)))
+
+################################################################################
+# Helper functions and decorators
+################################################################################
 
 def key404(f):
     """
@@ -65,6 +69,35 @@ def websocket(connect=None, message=None, error=None):
 def _clean(html):
     return clean.clean_html(html)
 
+################################################################################
+# Websocket handlers
+################################################################################
+
+def view_tally_route_websocket_connect(wsock, key=None):
+    def key_changed(tally=None):
+        wsock.send(json.dumps({'message': 'changed',
+                               'key': tally.key,
+                               'value': tally.value}))
+
+    events.on_value_changed(key_changed, key)
+
+    # pub sub is weak reference so send ref of key_changed back
+    # to event loop scope to keep it alive.
+    return [key_changed]
+
+def view_tally_route_websocket_message(wsock, message, key=None):
+    decoded = json.loads(message)
+    if('message' in decoded
+       and decoded['message'] == 'inc'
+       and 'key' in decoded
+       and 'inc' in decoded):
+        tally = tallies[decoded['key']]
+        tally.inc(float(decoded['inc']))
+
+################################################################################
+# Routes
+################################################################################
+
 @app.route('/')
 @view('index')
 def index_route():
@@ -78,40 +111,22 @@ def new_route():
 
 @app.post('/new')
 def new_action():
-    tally = tallies.new()
-    if(request.forms.name): tally.name = _clean(request.forms.name)
-    if(request.forms.desc): tally.desc = _clean(request.forms.desc)
-    if(request.forms.initial): tally.initial = float(request.forms.initial)
-    if(request.forms.unit): tally.unit = _clean(request.forms.unit)
-    if(request.forms.inc): tally.buttons = request.forms.getall('inc')
+    name = desc = initial = unit = buttons = None
+    if(request.forms.name): name = _clean(request.forms.name)
+    if(request.forms.desc): desc = _clean(request.forms.desc)
+    if(request.forms.initial): initial = float(request.forms.initial)
+    if(request.forms.unit): unit = _clean(request.forms.unit)
+    if(request.forms.inc): buttons = request.forms.getall('inc')
+    tally = Tally(name=name, desc=desc, initial=initial,
+                  unit=unit, buttons=buttons)
+    tallies[tally.key] = tally
     return redirect('/' + tally.key)
-
-def view_tally_route_websocket_connect(wsock, key=None):
-    def key_changed(tally=None):
-        wsock.send(json.dumps({'message': 'changed',
-                               'key': tally.key,
-                               'value': tally.value}))
-
-    pub.subscribe(key_changed, Tally.CHANGED_FIELD_TOPIC.format(key, 'value'))
-
-    # pub sub is weak reference so send ref of key_changed back
-    # to event loop scope to keep it alive.
-    return [key_changed]
-
-def view_tally_route_websocket_message(wsock, message, key=None):
-    decoded = json.loads(message)
-    if('message' in decoded
-       and decoded['message'] == 'inc'
-       and 'key' in decoded
-       and 'inc' in decoded):
-        tally = tallies.get(decoded['key'])
-        tally.inc(float(decoded['inc']))
 
 # base route for individual tally
 key_route = '/<key:re:[' + KEY_SPACE + ']*>'
 
 def tally_data(key):
-    tally = tallies.get(key)
+    tally = tallies[key]
     return {'nav': True,
             'key': tally.key,
             'value': tally.value,
@@ -143,7 +158,7 @@ def view_tally_route(key=None):
 @key404
 def inc_action(key=None):
     inc = float(request.forms.inc)
-    tally = tallies.get(key)
+    tally = tallies[key]
     tally.inc(inc)
     return redirect('/' + tally.key)
 
@@ -154,6 +169,10 @@ def static_route(filepath):
 @app.route('<filepath:path>/')
 def slash_route(filepath):
     return redirect(filepath)
+
+################################################################################
+# Main
+################################################################################
 
 def main():
     parser = argparse.ArgumentParser(
@@ -169,7 +188,6 @@ def main():
     server = WSGIServer((args.address, args.port), app,
                         handler_class=WebSocketHandler)
     server.serve_forever()
-
 
 if __name__ == "__main__":
     main()

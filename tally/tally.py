@@ -1,36 +1,26 @@
 import random
 import string
 import math
-from pubsub import pub
 from datetime import datetime
 from time import mktime
-from functools import wraps
+
+import events
+from events import publish_changes
 
 KEY_SPACE = 'ABCDEFGHJKLMNPQRSTUVWXY123456789'
 
 class Tally(object):
-    CHANGED_FIELD_TOPIC = 'tally.changed.key{0}.{1}'
-    CHANGED_TOPIC = 'tally.changed.key{0}'
-    NEW_TOPIC = 'tally.new'
 
-    def publish_changes(field):
-        def decorator(f):
-            def wrapper(self, *a, **ka):
-                topic = Tally.CHANGED_FIELD_TOPIC.format(self.key, field)
-                pub.sendMessage(topic, tally=self)
-                f(self, *a, **ka)
-            return wraps(f)(wrapper)
-        return decorator
-
-
-    def __init__(self):
+    def __init__(self, name=None, desc=None,
+                 initial=0.0, unit=None, buttons=[]):
         self._key = self.new_key()
-        self._value = 0.0
-        self._name = None
-        self._desc = None
-        self._initial = 0.0
-        self._unit = None
-        self._buttons = []
+        self._value = initial if initial else 0.0
+        self._name = name if name else None
+        self._desc = desc if desc else None
+        self._initial = initial if initial else 0.0
+        self._unit = unit if unit else None
+        self._buttons = buttons if buttons else []
+        events.new_tally(self)
 
     @property
     def initial(self):
@@ -106,19 +96,5 @@ class Tally(object):
 
     def inc(self, inc=1.0):
         self._value = self._value + float(inc)
-        topic = Tally.CHANGED_FIELD_TOPIC.format(self.key, 'value')
-        pub.sendMessage(topic, tally=self)
+        events.value_changed(self)
         return self._value
-
-class Tallies():
-    def __init__(self):
-        self._tallies = {}
-
-    def get(self, key):
-        return self._tallies[key]
-
-    def new(self):
-        new = Tally()
-        self._tallies[new.key] = new
-        pub.sendMessage(Tally.NEW_TOPIC, tally=self)
-        return new

@@ -1,20 +1,15 @@
 import unittest
+from threading import Event
 
-from tally.tally import Tally, Tallies
+from tally.events import on_value_changed, on_new_tally
+from tally.tally import Tally
 
 class TestTally(unittest.TestCase):
-
-    def setUp(self):
-        pass
 
     def test_new_counter_is_zero(self):
         tally = Tally()
         value = tally.value
         self.assertEqual(value, 0)
-
-    def test_key_not_found_get(self):
-        tallies = Tallies()
-        self.assertRaises(KeyError, tallies.get, 't')
 
     def test_new_key_is_unique(self):
         tally1 = Tally()
@@ -46,12 +41,34 @@ class TestTally(unittest.TestCase):
         self.assertEqual(tally.value, -3)
 
     def test_setting_initial_sets_value(self):
-        tally = Tally()
-
-        tally.initial = 3
+        tally = Tally(initial=3)
 
         self.assertEqual(tally.initial, 3)
         self.assertEqual(tally.value, 3)
+
+    def test_publish_on_value_changed(self):
+        tally = Tally()
+        result = [False]
+
+        def value_changed(tally=None):
+            if tally: result[0] = True
+
+        on_value_changed(value_changed, tally.key)
+
+        tally.inc(1)
+        self.assertEqual(result[0], True)
+
+
+    def test_publish_on_new(self):
+        result = [False]
+
+        def new_tally(tally=None):
+            if tally: result[0] = True
+
+        on_new_tally(new_tally)
+
+        tally = Tally()
+        self.assertEqual(result[0], True)
 
 if __name__ == '__main__':
     unittest.main()
