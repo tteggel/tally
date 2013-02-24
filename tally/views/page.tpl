@@ -52,7 +52,6 @@
           &copy; <a href="http://tteggel.org">Thom Leggett</a> 2013
           &mdash; <a href="https://twitter.com/thomleggett/">@thomleggett</a>
           &mdash; <a href="https://github.com/thom-leggett/tally">Fork it!</a>
-          &mdash; <a href="/credits">Credits</a></p>
       </div>
 
     </div> <!-- /container -->

@@ -14,14 +14,18 @@ class Mongo():
         events.on_value_changed_all(self.update_value)
 
     def insert_tally(self, tally=None):
-        s = tally._serialise()
-        s['_id'] = s['key']
-        self.tallies.insert(s)
+        if self.connection.alive():
+            s = tally._serialise()
+            s['_id'] = s['key']
+            self.tallies.insert(s)
 
     def update_value(self, tally=None):
-        self.tallies.update({'_id': tally.key},
-                            {'$set': {'value': tally.value}})
+        if self.connection.alive():
+            self.tallies.update({'_id': tally.key},
+                                {'$set': {'value': tally.value}})
 
     def __getitem__(self, key):
-        d = self.tallies.find_one({'_id': key})
+        d = None
+        if self.connection.alive():
+            d = self.tallies.find_one({'_id': key})
         return d
