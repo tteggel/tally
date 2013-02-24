@@ -6,10 +6,10 @@
 
 apt-get update
 
-apt-get install -y python2.7 python-pip python-virtualenv libevent-dev gcc python-dev
+apt-get install -y build-essential python2.7 python-pip python-virtualenv libevent-dev python-dev mongodb
 
 virtualenv -p python2.7 .venv
 
 source .venv/bin/activate
 
-pip install -r requirements.txt
+./setup.py install

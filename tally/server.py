@@ -15,9 +15,13 @@ import logging
 from tally import Tally, KEY_SPACE
 import version
 import events
+from mongo import Mongo
 
 tallies = {}
 app = Bottle()
+
+# Start mongo inserter / updater
+mongo = Mongo()
 
 bottle.TEMPLATE_PATH.append('{0}/views'.format(os.path.dirname(__file__)))
 
@@ -30,11 +34,18 @@ def key404(f):
     Make KeyErrors return 404.
     Apply to any route or action that takes a key as parameter.
     """
-    def wrapper(*a, **ka):
+    def wrapper(key=None, *a, **ka):
         try:
-            return f(*a, **ka)
+            return f(key=key, *a, **ka)
         except KeyError:
-            return abort(404, "Key Not Found")
+            d = mongo[key]
+            if d:
+                t = Tally(ghost=True)
+                t._deserialise(d)
+                tallies[t.key] = t
+                return f(key=key, *a, **ka)
+            else:
+                return abort(404, "Key Not Found")
     return wraps(f)(wrapper)
 
 def websocket(connect=None, message=None, error=None):

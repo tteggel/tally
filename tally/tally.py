@@ -12,15 +12,34 @@ KEY_SPACE = 'ABCDEFGHJKLMNPQRSTUVWXY123456789'
 class Tally(object):
 
     def __init__(self, name=None, desc=None,
-                 initial=0.0, unit=None, buttons=[]):
-        self._key = self.new_key()
+                 initial=0.0, unit=None, buttons=[], ghost=False):
         self._value = initial if initial else 0.0
         self._name = name if name else None
         self._desc = desc if desc else None
         self._initial = initial if initial else 0.0
         self._unit = unit if unit else None
         self._buttons = buttons if buttons else []
-        events.new_tally(self)
+        if not ghost:
+            self._key = self.new_key()
+            events.new_tally(self)
+
+    def _serialise(self):
+        return {'key': self.key,
+                'value': self.value,
+                'name': self.name,
+                'desc': self.desc,
+                'initial': self.initial,
+                'unit': self.unit,
+                'buttons': self.buttons}
+
+    def _deserialise(self, d):
+        self._key = d['key']
+        self._value = d['value']
+        self._name = d['name']
+        self._desc = d['desc']
+        self._initial = d['initial']
+        self._unit = d['unit']
+        self._buttons = d['buttons']
 
     @property
     def initial(self):
