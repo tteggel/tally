@@ -5,13 +5,23 @@ import events
 
 class Mongo():
 
+    __started = False
+
     def __init__(self):
-        self.connection = MongoClient()
-        self.db = self.connection.tally
-        self.tallies = self.db.tallies
+        if Mongo.__started:
+            return
+
+        try:
+            self.connection = MongoClient()
+            self.db = self.connection.tally
+            self.tallies = self.db.tallies
+        except ConnectionFailure:
+            pass
 
         events.on_new_tally(self.insert_tally)
         events.on_value_changed_all(self.update_value)
+
+        Mongo.__started = True
 
     def insert_tally(self, tally=None):
         if self.connection.alive():

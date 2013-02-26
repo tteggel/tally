@@ -6,8 +6,32 @@ from time import mktime
 
 import events
 from events import publish_changes
+from mongo import Mongo
+
+# Start mongo inserter / updater
+mongo = Mongo()
 
 KEY_SPACE = 'ABCDEFGHJKLMNPQRSTUVWXY123456789'
+
+class Tallies(object):
+    def __init__(self):
+        self._tallies = {}
+
+    def __getitem__(self, key):
+        if key in self._tallies:
+            return self._tallies[key]
+        else:
+            d = mongo[key]
+            if d:
+                t = Tally(ghost=True)
+                t._deserialise(d)
+                self._tallies[t.key] = t
+                return t
+            else:
+                raise KeyError()
+
+    def __setitem__(self, key, value):
+        self._tallies[key] = value
 
 class Tally(object):
 

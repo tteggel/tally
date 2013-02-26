@@ -1,7 +1,6 @@
 import bottle
 from bottle import Bottle, view, static_file, redirect, abort, request
 from gevent import sleep
-from gevent import monkey; monkey.patch_all()
 from gevent.pywsgi import WSGIServer
 from geventwebsocket import WebSocketError, WebSocketHandler
 from lxml.html import clean
@@ -12,16 +11,12 @@ import argparse
 import os
 import logging
 
-from tally import Tally, KEY_SPACE
+from tally import Tally, Tallies, KEY_SPACE
 import version
 import events
-from mongo import Mongo
 
-tallies = {}
+tallies = Tallies()
 app = Bottle()
-
-# Start mongo inserter / updater
-mongo = Mongo()
 
 bottle.TEMPLATE_PATH.append('{0}/views'.format(os.path.dirname(__file__)))
 
@@ -38,14 +33,7 @@ def key404(f):
         try:
             return f(key=key, *a, **ka)
         except KeyError:
-            d = mongo[key]
-            if d:
-                t = Tally(ghost=True)
-                t._deserialise(d)
-                tallies[t.key] = t
-                return f(key=key, *a, **ka)
-            else:
-                return abort(404, "Key Not Found")
+            return abort(404, "Key Not Found")
     return wraps(f)(wrapper)
 
 def websocket(connect=None, message=None, error=None):
@@ -175,7 +163,8 @@ def inc_action(key=None):
 
 @app.route('/static/<filepath:path>')
 def static_route(filepath):
-    return static_file(filepath, root='{0}/static'.format(os.path.dirname(__file__)))
+    return static_file(filepath,
+                       root='{0}/static'.format(os.path.dirname(__file__)))
 
 @app.route('<filepath:path>/')
 def slash_route(filepath):
@@ -187,7 +176,8 @@ def slash_route(filepath):
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Tally server (v{0}). Create and share a counter.'.format(version.get_version()))
+        description="""Tally server (v{0}).
+        Create and share a counter.""".format(version.get_version()))
     parser.add_argument('-a', '--address', default="0.0.0.0",
                         help="the ip address to bind to.",
                         type=str)
