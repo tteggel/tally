@@ -14,6 +14,7 @@ import logging
 from tally import Tally, Tallies, KEY_SPACE
 import version
 import events
+from mongo import Mongo
 
 tallies = Tallies()
 app = Bottle()
@@ -178,13 +179,22 @@ def main():
     parser = argparse.ArgumentParser(
         description="""Tally server (v{0}).
         Create and share a counter.""".format(version.get_version()))
-    parser.add_argument('-a', '--address', default="0.0.0.0",
-                        help="the ip address to bind to.",
+    parser.add_argument('-a', '--address', default='0.0.0.0',
+                        help='the ip address to bind to.',
                         type=str)
     parser.add_argument('-p', '--port', default=8080,
-                        help="the port number to bind to.",
+                        help='the port number to bind to.',
+                        type=int)
+    parser.add_argument('-m', '--mongohost', default='127.0.0.1',
+                        help='the hostname of the mongodb server.',
+                        type=str)
+    parser.add_argument('-n', '--mongoport', default=27017,
+                        help='the port number of the mongodb server.',
                         type=int)
     args = parser.parse_args()
+
+    Mongo.DEFAULTHOST = args.mongohost
+    Mongo.DEFAULTPORT = args.mongoport
 
     server = WSGIServer((args.address, args.port), app,
                         handler_class=WebSocketHandler)

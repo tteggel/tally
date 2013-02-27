@@ -6,7 +6,7 @@
 
 apt-get update
 
-apt-get install -y build-essential python2.7 python-pip python-virtualenv libevent-dev python-dev mongodb
+apt-get install -y build-essential python2.7 python-pip python-virtualenv libevent-dev python-dev libxml2-dev libxslt-dev
 
 virtualenv -p python2.7 .venv
 

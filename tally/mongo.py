@@ -8,12 +8,15 @@ class Mongo():
 
     __started = False
 
+    DEFAULTPORT = 27017
+    DEFAULTHOST = '127.0.0.1'
+
     def __init__(self):
         if Mongo.__started:
             return
 
         try:
-            self.connection = MongoClient()
+            self.connection = MongoClient(host=Mongo.DEFAULTHOST, port=Mongo.DEFAULTPORT)
             self.db = self.connection.tally
             self.tallies = self.db.tallies
             self.tally_events = self.db.tally_events
