@@ -7,7 +7,7 @@ import events
 import config
 from config import Bunch
 
-class Mongo():
+class Mongo(object):
 
     __started = False
 
