@@ -14,11 +14,38 @@ import logging
 from tally import Tally, Tallies, KEY_SPACE
 import version
 import events
-from mongo import Mongo
+import config
 
-tallies = Tallies()
+################################################################################
+# Command line config
+################################################################################
+parser = argparse.ArgumentParser(
+    description="""Tally server (v{0}).
+    Create and share a counter.""".format(version.get_version()))
+parser.add_argument('-a', '--address', default='0.0.0.0',
+                    help='the ip address to bind to.',
+                    type=str)
+parser.add_argument('-p', '--port', default=8080,
+                    help='the port number to bind to.',
+                    type=int)
+parser.add_argument('-m', '--mongohost', default='127.0.0.1',
+                    help='the hostname of the mongodb server.',
+                    type=str)
+parser.add_argument('-n', '--mongoport', default=27017,
+                    help='the port number of the mongodb server.',
+                    type=int)
+args = parser.parse_args()
+
+config.mongo.host = args.mongohost
+print config.mongo.host
+config.mongo.port = args.mongoport
+
+################################################################################
+# Module setup
+################################################################################
+
 app = Bottle()
-
+tallies = Tallies()
 bottle.TEMPLATE_PATH.append('{0}/views'.format(os.path.dirname(__file__)))
 
 ################################################################################
@@ -98,6 +125,11 @@ def view_tally_route_websocket_message(wsock, message, key=None):
 # Routes
 ################################################################################
 
+# base route for individual tally
+key_route = '/<key:re:[' + KEY_SPACE + ']*>'
+
+## Satic routes ################################################################
+
 @app.route('/')
 @view('index')
 def index_route():
@@ -108,6 +140,20 @@ def index_route():
 def new_route():
     return {'page': True,
             'nav': True}
+
+@app.route('/static/<filepath:path>')
+def static_route(filepath):
+    return static_file(filepath,
+                       root='{0}/static'.format(os.path.dirname(__file__)))
+
+@app.route('<filepath:path>/')
+def slash_route(filepath):
+    """
+    Redirect routes with trailing slash to one without.
+    """
+    return redirect(filepath)
+
+## Actions #####################################################################
 
 @app.post('/new')
 def new_action():
@@ -122,8 +168,15 @@ def new_action():
     tallies[tally.key] = tally
     return redirect('/' + tally.key)
 
-# base route for individual tally
-key_route = '/<key:re:[' + KEY_SPACE + ']*>'
+@app.post(key_route + '/inc')
+@key404
+def inc_action(key=None):
+    inc = float(request.forms.inc)
+    tally = tallies[key]
+    tally.inc(inc)
+    return redirect('/' + tally.key)
+
+## Dynamic routes ##############################################################
 
 def tally_data(key):
     tally = tallies[key]
@@ -154,48 +207,14 @@ def view_tally_minimal_route(key=None):
 def view_tally_route(key=None):
     return tally_data(key)
 
-@app.post(key_route + '/inc')
-@key404
-def inc_action(key=None):
-    inc = float(request.forms.inc)
-    tally = tallies[key]
-    tally.inc(inc)
-    return redirect('/' + tally.key)
-
-@app.route('/static/<filepath:path>')
-def static_route(filepath):
-    return static_file(filepath,
-                       root='{0}/static'.format(os.path.dirname(__file__)))
-
-@app.route('<filepath:path>/')
-def slash_route(filepath):
-    return redirect(filepath)
-
 ################################################################################
 # Main
 ################################################################################
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="""Tally server (v{0}).
-        Create and share a counter.""".format(version.get_version()))
-    parser.add_argument('-a', '--address', default='0.0.0.0',
-                        help='the ip address to bind to.',
-                        type=str)
-    parser.add_argument('-p', '--port', default=8080,
-                        help='the port number to bind to.',
-                        type=int)
-    parser.add_argument('-m', '--mongohost', default='127.0.0.1',
-                        help='the hostname of the mongodb server.',
-                        type=str)
-    parser.add_argument('-n', '--mongoport', default=27017,
-                        help='the port number of the mongodb server.',
-                        type=int)
-    args = parser.parse_args()
-
-    Mongo.DEFAULTHOST = args.mongohost
-    Mongo.DEFAULTPORT = args.mongoport
-
+    """
+    Run the server.
+    """
     server = WSGIServer((args.address, args.port), app,
                         handler_class=WebSocketHandler)
     server.serve_forever()

@@ -4,25 +4,24 @@ from bson.objectid import ObjectId
 from datetime import datetime
 
 import events
+import config
+from config import Bunch
 
 class Mongo():
 
     __started = False
-
-    DEFAULTPORT = 27017
-    DEFAULTHOST = '127.0.0.1'
 
     def __init__(self):
         if Mongo.__started:
             return
 
         try:
-            self.connection = MongoClient(host=Mongo.DEFAULTHOST, port=Mongo.DEFAULTPORT)
+            self.connection = MongoClient(host=config.mongo.host, port=config.mongo.port)
             self.db = self.connection.tally
             self.tallies = self.db.tallies
             self.tally_events = self.db.tally_events
         except ConnectionFailure:
-            pass
+            self.connection = Bunch(alive=lambda: False)
 
         events.on_new_tally(self.insert_tally)
         events.on_value_changed_all(self.update_value)

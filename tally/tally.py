@@ -8,20 +8,21 @@ import events
 from events import publish_changes
 from mongo import Mongo
 
-# Start mongo inserter / updater
-mongo = Mongo()
-
 KEY_SPACE = 'ABCDEFGHJKLMNPQRSTUVWXY123456789'
 
 class Tallies(object):
     def __init__(self):
         self._tallies = {}
 
+        # Start mongo inserter / updater
+        self.mongo = Mongo()
+
+
     def __getitem__(self, key):
         if key in self._tallies:
             return self._tallies[key]
         else:
-            d = mongo[key]
+            d = self.mongo[key]
             if d:
                 t = Tally(ghost=True)
                 t._deserialise(d)
