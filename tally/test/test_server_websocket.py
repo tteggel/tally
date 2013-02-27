@@ -48,8 +48,6 @@ class TestWebSocket(unittest.TestCase):
                     # -1 + 1 = 0
                     self.send_inc(1, expected=0)
 
-                    fin.set()
-
             class ListeningClient(WebSocketClient):
                 def opened(self):
                     self.ws_two = SendingClient(ws_url)
@@ -62,6 +60,7 @@ class TestWebSocket(unittest.TestCase):
                     results.append(result)
                     ready.notify()
                     ready.release()
+                    if len(results) == 4: fin.set()
 
             ws_one = ListeningClient(ws_url)
             ws_one.connect()
