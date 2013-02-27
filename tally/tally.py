@@ -48,7 +48,8 @@ class Tally(object):
             events.new_tally(self)
 
     def _serialise(self):
-        return {'key': self.key,
+        return {'version': 1,
+                'key': self.key,
                 'value': self.value,
                 'name': self.name,
                 'desc': self.desc,
@@ -57,13 +58,14 @@ class Tally(object):
                 'buttons': self.buttons}
 
     def _deserialise(self, d):
-        self._key = d['key']
-        self._value = d['value']
-        self._name = d['name']
-        self._desc = d['desc']
-        self._initial = d['initial']
-        self._unit = d['unit']
-        self._buttons = d['buttons']
+        if d['version'] == 1:
+            self._key = d['key']
+            self._value = d['value']
+            self._name = d['name']
+            self._desc = d['desc']
+            self._initial = d['initial']
+            self._unit = d['unit']
+            self._buttons = d['buttons']
 
     @property
     def initial(self):
