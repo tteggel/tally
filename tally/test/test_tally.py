@@ -18,7 +18,7 @@ class TestTally(unittest.TestCase):
 
     def test_many_keys_are_unique_one(self):
         keys = {}
-        for i in range(451):
+        for i in range(9):
             key = Tally().key
             self.assertTrue(key not in keys)
             keys[key] = True
