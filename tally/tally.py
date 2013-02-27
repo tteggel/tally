@@ -17,7 +17,6 @@ class Tallies(object):
         # Start mongo inserter / updater
         self.mongo = Mongo()
 
-
     def __getitem__(self, key):
         if key in self._tallies:
             return self._tallies[key]

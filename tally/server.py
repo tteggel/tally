@@ -37,7 +37,6 @@ parser.add_argument('-n', '--mongoport', default=27017,
 args = parser.parse_args()
 
 config.mongo.host = args.mongohost
-print config.mongo.host
 config.mongo.port = args.mongoport
 
 ################################################################################
