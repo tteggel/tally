@@ -1,4 +1,5 @@
-from pymongo import MongoClient, ConnectionFailure
+from pymongo import MongoClient
+from pymongo.errors import ConnectionFailure
 from bson.objectid import ObjectId
 from datetime import datetime
 
