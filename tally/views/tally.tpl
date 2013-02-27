@@ -20,7 +20,7 @@
   <form action="/{{key}}/inc" method="POST">
 %for button in buttons:
   <button type="submit" id="inc" class="btn btn-success btn-large inc" href="#" name="inc" value="{{button}}">\\
-%if button>0:
+%if int(button)>0:
 +\\
 %end
 {{int(button)}}</button>
