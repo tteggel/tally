@@ -130,6 +130,8 @@ key_route = '/<key:re:[' + KEY_SPACE + ']*>'
 
 ## Satic routes ################################################################
 
+static_root = '{0}/static'.format(os.path.dirname(__file__))
+
 @app.route('/')
 @view('index')
 def index_route():
@@ -143,8 +145,7 @@ def new_route():
 
 @app.route('/static/<filepath:path>')
 def static_route(filepath):
-    return static_file(filepath,
-                       root='{0}/static'.format(os.path.dirname(__file__)))
+    return static_file(filepath, root=static_root)
 
 @app.route('<filepath:path>/')
 def slash_route(filepath):
@@ -152,6 +153,10 @@ def slash_route(filepath):
     Redirect routes with trailing slash to one without.
     """
     return redirect(filepath)
+
+@app.route('/favicon.ico')
+def favicon():
+    return static_route('favicon.ico')
 
 ## Actions #####################################################################
 
