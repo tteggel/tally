@@ -3,6 +3,11 @@ Tally
 
 It counts stuff.
 
+License
+-------
+
+MIT. See LICENSE file.
+
 Build Status
 ------------
 |travis|_

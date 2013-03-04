@@ -1,3 +1,10 @@
+"""
+Tally counts stuff.
+
+Copyright (c) 2013, Thom Leggett.
+License: MIT (see LICENSE for details)
+"""
+
 from gevent import monkey; monkey.patch_all()
 import bottle
 from bottle import Bottle, view, static_file, redirect, abort, request

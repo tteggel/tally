@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 
+"""
+Copyright (c) 2013, Thom Leggett.
+License: MIT (see LICENSE for details)
+"""
+
 import sys
 
 from setuptools import setup, find_packages
