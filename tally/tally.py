@@ -123,7 +123,6 @@ class Tally(object):
 
     def new_key(self):
         key_exists = True
-        tries = 42
         key = ''
         key_bits_per_char = int(math.ceil(math.log(len(KEY_SPACE), 2)))
 

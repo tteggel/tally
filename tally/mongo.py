@@ -1,9 +1,10 @@
 from pymongo import MongoClient
-from pymongo.errors import ConnectionFailure
+from pymongo.errors import ConnectionFailure, AutoReconnect
 from bson.objectid import ObjectId
 from datetime import datetime
 
 import events
+from retry import retry
 import config
 from config import Bunch
 
@@ -29,7 +30,10 @@ class Mongo(object):
         Mongo.__started = True
 
     def insert_tally(self, tally=None):
-        if self.connection.alive():
+        @retry(AutoReconnect, tries=7, delay=1, backoff=2)
+        def _retry():
+            if not self.connection.alive(): return
+
             # add the tally to the tally collection
             s = tally._serialise()
             s['_id'] = s['key']
@@ -41,8 +45,13 @@ class Mongo(object):
                      'tally': tally._serialise()}
             self.tally_events.insert(event)
 
+        _retry()
+
     def update_value(self, tally=None):
-        if self.connection.alive():
+        @retry(AutoReconnect, tries=7, delay=1, backoff=2)
+        def _retry():
+            if not self.connection.alive(): return
+
             # update the value in the tally collection
             self.tallies.update({'_id': tally.key},
                                 {'$set': {'value': tally.value}})
@@ -55,8 +64,15 @@ class Mongo(object):
                      'key': tally.key}
             self.tally_events.insert(event)
 
+        _retry()
+
     def __getitem__(self, key):
-        d = None
-        if self.connection.alive():
+        @retry(AutoReconnect, tries=7, delay=1, backoff=2)
+        def _retry():
+            if not self.connection.alive(): return
+
+            d = None
             d = self.tallies.find_one({'_id': key})
-        return d
+            return d
+
+        return _retry()
