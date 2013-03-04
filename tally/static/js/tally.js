@@ -5,9 +5,11 @@
   $(ready);
 
   function ready() {
-    key = document.location.pathname.substr(1).split('/')[0];
-    hijack();
-    listen();
+    if ('WebSocket' in window && typeof WebSocket == 'function') {
+      key = document.location.pathname.substr(1).split('/')[0];
+      hijack();
+      listen();
+    }
   }
 
   function hijack() {
@@ -23,12 +25,6 @@
   }
 
   function listen() {
-    function open(event) {
-    }
-
-    function close(event) {
-    }
-
     function message(event) {
       decoded = JSON.parse(event.data);
       if(decoded &&
@@ -38,14 +34,8 @@
       }
     }
 
-    function error(event) {
-    }
-
-    websocket = new WebSocket(document.location.href.replace('http', 'ws'));
-    websocket.onopen = open;
-    websocket.onclose = close;
+    websocket = new ReconnectingWebSocket(document.location.href.replace('http', 'ws'));
     websocket.onmessage = message;
-    websocket.onerror = error;
   }
 
 }());

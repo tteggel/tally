@@ -27,5 +27,6 @@
 %end
 </form>
 </div>
+<script type="text/javascript" src="/static/js/reconnecting-websocket.js"></script>
 <script type="text/javascript" src="/static/js/tally.js"></script>
 </div>
