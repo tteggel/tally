@@ -27,6 +27,7 @@ import config
 ################################################################################
 # Command line config
 ################################################################################
+script_path = os.path.dirname(__file__)
 parser = argparse.ArgumentParser(
     description="""Tally server (v{0}).
     Create and share a counter.""".format(version.get_version()))
@@ -42,18 +43,24 @@ parser.add_argument('-m', '--mongohost', default='127.0.0.1',
 parser.add_argument('-n', '--mongoport', default=27017,
                     help='the port number of the mongodb server.',
                     type=int)
+parser.add_argument('-c', '--certfile', default=script_path + '/../server.crt',
+                    help='Path to SSL certificate file. Defaults to built in self-signed cert.',
+                    type=str)
+parser.add_argument('-k', '--keyfile', default=script_path + '/../server.key',
+                    help='Path to SSL key file. Defaults to built in key.',
+                    type=str)
 args = parser.parse_args()
 
 config.mongo.host = args.mongohost
 config.mongo.port = args.mongoport
 
 ################################################################################
-# Module setup
+# App setup
 ################################################################################
 
 app = Bottle()
 tallies = Tallies()
-bottle.TEMPLATE_PATH.append('{0}/views'.format(os.path.dirname(__file__)))
+bottle.TEMPLATE_PATH.append('{0}/views'.format(script_path))
 
 ################################################################################
 # Helper functions and decorators
@@ -137,7 +144,7 @@ key_route = '/<key:re:[' + KEY_SPACE + ']*>'
 
 ## Satic routes ################################################################
 
-static_root = '{0}/static'.format(os.path.dirname(__file__))
+static_root = '{0}/static'.format(script_path)
 
 @app.route('/')
 @view('index')
@@ -228,7 +235,9 @@ def main():
     Run the server.
     """
     server = WSGIServer((args.address, args.port), app,
-                        handler_class=WebSocketHandler)
+                        handler_class=WebSocketHandler,
+                        keyfile=args.keyfile,
+                        certfile=args.certfile)
     server.serve_forever()
 
 if __name__ == "__main__":

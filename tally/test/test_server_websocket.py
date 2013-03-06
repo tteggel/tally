@@ -13,7 +13,8 @@ class TestWebSocket(unittest.TestCase):
         with TestServer('server') as test_server:
             url = test_server.url
             new_response = requests.post(url + 'new',
-                                         allow_redirects=False)
+                                         allow_redirects=False,
+                                         verify=False)
             tally_url = new_response.headers['Location']
             key = tally_url.split('/')[-1]
             ws_url = tally_url.replace('http', 'ws')

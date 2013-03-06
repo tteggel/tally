@@ -1,4 +1,5 @@
 import requests
+from requests import ConnectionError
 import socket
 from subprocess import Popen
 import os
@@ -32,7 +33,7 @@ class TestServer():
                                          '-p', str(port)],
                                         stderr=devnull, stdout=devnull)
 
-        self.url = 'http://{0}:{1}/'.format(host, port)
+        self.url = 'https://{0}:{1}/'.format(host, port)
 
         self.wait_ready()
 
@@ -45,10 +46,13 @@ class TestServer():
         tries = self.max_connect_tries
         while tries > 0:
             try:
-                r = requests.get(self.url)
+                r = requests.get(self.url, verify=False)
                 if (r.status_code == 200):
                     break
-            except:
+            except ConnectionError:
                 pass
+
             sleep(.1)
             tries = tries - 1
+
+        if tries == 0: raise ConnectionError

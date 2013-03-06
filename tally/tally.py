@@ -1,14 +1,14 @@
-import random
-import string
 import math
 from datetime import datetime
 from time import mktime
+import socket
+import hashlib
 
 import events
 from events import publish_changes
 from mongo import Mongo
 
-KEY_SPACE = 'ABCDEFGHJKLMNPQRSTUVWXY123456789'
+KEY_SPACE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-'
 
 class Tallies(object):
     def __init__(self):
@@ -34,6 +34,8 @@ class Tallies(object):
         self._tallies[key] = value
 
 class Tally(object):
+
+    #chars_in_key = 5
 
     def __init__(self, name=None, desc=None,
                  initial=0.0, unit=None, buttons=[], ghost=False):
@@ -128,12 +130,15 @@ class Tally(object):
 
         dt = datetime.now()
         micros_since_epoch = int((mktime(dt.timetuple()) * 1000000)  + dt.microsecond)
-        bits_in_time = int(math.floor(math.log(micros_since_epoch, 2)) + 1)
-        chars_in_key = int(math.ceil(bits_in_time / key_bits_per_char))
+        fqdn = socket.getfqdn()
+        hash = hashlib.md5('thom is salty' + fqdn + str(micros_since_epoch))
+        digest = int(hash.hexdigest(), 16)
+
+        chars_in_key = int(math.ceil((hash.digest_size * 8) / key_bits_per_char))
 
         for n in range(chars_in_key):
-            mask = int(math.pow(2, key_bits_per_char)-1) << (n * 5)
-            index = (micros_since_epoch & mask) >> (n * 5)
+            mask = int(math.pow(2, key_bits_per_char)-1) << (n * key_bits_per_char)
+            index = (digest & mask) >> (n * key_bits_per_char)
             key = key + KEY_SPACE[index]
 
         return key
