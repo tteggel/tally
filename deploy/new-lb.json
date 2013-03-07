@@ -1,0 +1,10 @@
+{
+  "name": "tally-lb",
+  "protocol": "tcp",
+  "nodes":      [
+    {
+      "address": "15.185.231.229",
+      "port": "8080"
+    }
+  ]
+}
