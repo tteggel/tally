@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Tally. Count stuff. &mdash; tally.tteggel.org</title>
+    <title>Tally. Count stuff.</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="">
@@ -38,7 +38,7 @@
           <li><a href="/">Home</a></li>
           <li><a href="/new#new" data-toggle="modal">Create a new tally</a></li>
         </ul>
-        <h3 class="muted"><a href="http://tally.tteggel.org/">tally.tteggel.org</a></h3>
+        <h3 class="muted"><a href="https://tally.tteggel.org/">tally.tteggel.org</a></h3>
       </div>
       <hr>
 %end
