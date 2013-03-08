@@ -45,6 +45,7 @@
 
 %include
 
+%if defined('nav') and nav:
       <hr>
 
       <div class="footer row">
@@ -54,6 +55,7 @@
           &mdash; <a href="https://github.com/thom-leggett/tally">Fork it!</a>
           &mdash; <a href="https://hpcloud.com">Hosted on the HP Cloud</a>
       </div>
+%end
 
     </div> <!-- /container -->
 
