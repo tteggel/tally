@@ -1,4 +1,4 @@
-%rebase page nav=nav
+%rebase page nav=nav, name=name
 
 <div class="jumbotron">
 

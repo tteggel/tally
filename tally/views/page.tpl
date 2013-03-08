@@ -2,7 +2,12 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Tally. Count stuff.</title>
+
+%if defined('name') and name:
+    <title>Tally &mdash; {{!name}}</title>
+%else:
+    <title>Tally &mdash; Count Stuff.</title>
+%end
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="">

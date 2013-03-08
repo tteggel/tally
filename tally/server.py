@@ -11,7 +11,7 @@ from bottle import Bottle, view, static_file, redirect, abort, request
 from gevent import sleep
 from gevent.pywsgi import WSGIServer
 from geventwebsocket import WebSocketError, WebSocketHandler
-from lxml.html import clean
+import bleach
 
 from functools import wraps
 import json
@@ -107,8 +107,9 @@ def websocket(connect=None, message=None, error=None):
         return wraps(f)(wrapper)
     return decorator
 
-def _clean(html):
-    return clean.clean_html(html)
+def _sanitise(untrusted):
+    safe_html = bleach.clean(untrusted)
+    return safe_html
 
 ################################################################################
 # Websocket handlers
@@ -177,11 +178,13 @@ def favicon():
 @app.post('/new')
 def new_action():
     name = desc = initial = unit = buttons = None
-    if(request.forms.name): name = _clean(request.forms.name)
-    if(request.forms.desc): desc = _clean(request.forms.desc)
+    if(request.forms.name): name = _sanitise(request.forms.name)
+    if(request.forms.desc): desc = _sanitise(request.forms.desc)
     if(request.forms.initial): initial = float(request.forms.initial)
-    if(request.forms.unit): unit = _clean(request.forms.unit)
-    if(request.forms.inc): buttons = request.forms.getall('inc')
+    if(request.forms.unit): unit = _sanitise(request.forms.unit)
+    if(request.forms.inc):
+        _buttons = request.forms.getall('inc')
+        buttons = map(int, _buttons)
     tally = Tally(name=name, desc=desc, initial=initial,
                   unit=unit, buttons=buttons)
     tallies[tally.key] = tally
@@ -202,10 +205,10 @@ def tally_data(key):
     return {'nav': True,
             'key': tally.key,
             'value': tally.value,
-            'name': tally.name,
-            'desc': tally.desc,
+            'name': _sanitise(tally.name),
+            'desc': _sanitise(tally.desc),
             'initial': tally.initial,
-            'unit': tally.unit,
+            'unit': _sanitise(tally.unit),
             'buttons': tally.buttons}
 
 @app.route(key_route + "/minimal")

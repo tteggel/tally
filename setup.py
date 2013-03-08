@@ -33,8 +33,8 @@ setup(
                       'gevent==0.13.8',
                       'gevent-websocket==0.3.6',
                       'pypubsub==3.1.2',
-                      'lxml==3.1.0',
-                      'pymongo==2.4.2'],
+                      'pymongo==2.4.2',
+                      'bleach==1.2.1'],
     entry_points={
         'console_scripts': [
             'tally = tally.server:main',
